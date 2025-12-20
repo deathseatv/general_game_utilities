@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"GameStateManagerTests",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"GameStateManagerTests",
+  "parent":{
+    "name":"Managers",
+    "path":"folders/TestSuite/Managers.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

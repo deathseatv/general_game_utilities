@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"EventBusTests",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"EventBusTests",
+  "parent":{
+    "name":"Managers",
+    "path":"folders/TestSuite/Managers.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

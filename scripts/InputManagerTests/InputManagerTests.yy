@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"InputManagerTests",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"InputManagerTests",
+  "parent":{
+    "name":"Managers",
+    "path":"folders/TestSuite/Managers.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

@@ -1,0 +1,1 @@
+show_debug_message("[rm_game] entered, o_app exists=" + string(instance_exists(o_app)));

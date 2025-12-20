@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"GameStateManager",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"GameStateManager",
+  "parent":{
+    "name":"Managers",
+    "path":"folders/Scripts/Managers.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
