@@ -76,6 +76,7 @@
     {"id":{"name":"TestManager","path":"scripts/TestManager/TestManager.yy",},},
     {"id":{"name":"TimeManager","path":"scripts/TimeManager/TimeManager.yy",},},
     {"id":{"name":"TimeManagerTests","path":"scripts/TimeManagerTests/TimeManagerTests.yy",},},
+    {"id":{"name":"ZZZZZZZZ","path":"scripts/ZZZZZZZZ/ZZZZZZZZ.yy",},},
     {"id":{"name":"s_gmtl_demo_clickable","path":"sprites/s_gmtl_demo_clickable/s_gmtl_demo_clickable.yy",},},
   ],
   "resourceType":"GMProject",

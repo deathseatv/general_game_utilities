@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"ZZZZZZZZ",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"ZZZZZZZZ",
+  "parent":{
+    "name":"general_game_utilities",
+    "path":"general_game_utilities.yyp",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
