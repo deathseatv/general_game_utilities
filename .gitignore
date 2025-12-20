@@ -60,3 +60,27 @@ Temporary Items
 
 # GMRT build directory
 Build
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode/
+.idea/
+
+# GameMaker caches / temp
+*.tmp
+*.temp
+*.bak
+*.backup
+*.autosave
+
+# GameMaker build output (common)
+output/
+build/
+bin/
+
+# YoYo cache folders (if they appear)
+.yyc/
+.yypc/
