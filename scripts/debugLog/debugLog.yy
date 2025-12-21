@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"ZZZZZZZZ",
+  "%Name":"debugLog",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"ZZZZZZZZ",
+  "name":"debugLog",
   "parent":{
-    "name":"general_game_utilities",
-    "path":"general_game_utilities.yyp",
+    "name":"Features",
+    "path":"folders/Scripts/Features.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

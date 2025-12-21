@@ -11,6 +11,8 @@ function AppController() constructor
 	time = undefined;
 	camera = undefined;
 
+	debugConsole = undefined;
+
 	booted = false;
 
 	init = function()
@@ -22,7 +24,6 @@ function AppController() constructor
 
 		booted = true;
 
-		// reuse existing global bus if one exists
 		if(variable_global_exists("events") && is_struct(global.events))
 		{
 			events = global.events;
@@ -39,7 +40,6 @@ function AppController() constructor
 			global.eventBus = events;
 		}
 
-		// if globals already exist (from editor/test), reuse them
 		input = (variable_global_exists("input") && is_struct(global.input)) ? global.input : new InputManager();
 		menus = (variable_global_exists("menus") && is_struct(global.menus)) ? global.menus : new MenuManager();
 		audio = (variable_global_exists("audio") && is_struct(global.audio)) ? global.audio : new AudioManager();
@@ -49,6 +49,8 @@ function AppController() constructor
 		time = (variable_global_exists("time") && is_struct(global.time)) ? global.time : new TimeManager();
 		camera = (variable_global_exists("camera") && is_struct(global.camera)) ? global.camera : new CameraManager();
 
+		debugConsole = (variable_global_exists("debugConsole") && is_struct(global.debugConsole)) ? global.debugConsole : new DebugConsole();
+
 		global.input = input;
 		global.menus = menus;
 		global.audio = audio;
@@ -57,8 +59,8 @@ function AppController() constructor
 		global.settings = settings;
 		global.time = time;
 		global.camera = camera;
+		global.debugConsole = debugConsole;
 
-		// init each system ONCE (safe even if they subscribe multiple times, but we avoid it)
 		audio.init(events);
 		settings.init(events);
 		time.init(events);
@@ -71,8 +73,69 @@ function AppController() constructor
 
 		settings.apply();
 
+		self.initDebugConsole();
+
 		gameState.setState(gameState.states.menu);
 		menus.show("intro");
+	};
+
+	initDebugConsole = function()
+	{
+		if(!is_struct(debugConsole))
+		{
+			return;
+		}
+
+		if(!variable_struct_exists(debugConsole, "registerCommand"))
+		{
+			return;
+		}
+
+		if(!variable_struct_exists(debugConsole, "commands"))
+		{
+			return;
+		}
+
+		debugConsole.registerCommand("help", "help", function(args, line)
+		{
+			var names = variable_struct_get_names(debugConsole.commands);
+			array_sort(names, true);
+
+			debugConsole.log("Commands:");
+			for(var i = 0; i < array_length(names); i += 1)
+			{
+				var entry = debugConsole.commands[$ names[i]];
+				if(is_struct(entry) && variable_struct_exists(entry, "usage"))
+				{
+					debugConsole.log("- " + entry.usage);
+				}
+			}
+		});
+
+		debugConsole.registerCommand("clear", "clear", function(args, line)
+		{
+			debugConsole.lines = [];
+		});
+
+		debugConsole.registerCommand("pause", "pause [0/1]", function(args, line)
+		{
+			if(array_length(args) == 0)
+			{
+				debugConsole.pauseWhenOpen = !debugConsole.pauseWhenOpen;
+				debugConsole.log("pauseWhenOpen = " + string(debugConsole.pauseWhenOpen));
+				return;
+			}
+
+			debugConsole.pauseWhenOpen = (real(args[0]) != 0);
+			debugConsole.log("pauseWhenOpen = " + string(debugConsole.pauseWhenOpen));
+		});
+
+		debugConsole.registerCommand("close", "close", function(args, line)
+		{
+			debugConsole.close();
+		});
+
+		debugConsole.log("Console ready. Type 'help'.");
 	};
 
 	update = function()
@@ -80,6 +143,49 @@ function AppController() constructor
 		if(!booted)
 		{
 			return;
+		}
+
+		var playingId = "playing";
+		if(is_struct(gameState))
+		{
+			if(variable_struct_exists(gameState, "states") && is_struct(gameState.states))
+			{
+				if(variable_struct_exists(gameState.states, "playing"))
+				{
+					playingId = gameState.states.playing;
+				}
+			}
+		}
+
+		var isPlaying = false;
+		if(is_struct(gameState))
+		{
+			if(variable_struct_exists(gameState, "state") && gameState.state == playingId) isPlaying = true;
+			else if(variable_struct_exists(gameState, "currentState") && gameState.currentState == playingId) isPlaying = true;
+			else if(variable_struct_exists(gameState, "currentStateId") && gameState.currentStateId == playingId) isPlaying = true;
+			else if(variable_struct_exists(gameState, "stateId") && gameState.stateId == playingId) isPlaying = true;
+			else if(variable_struct_exists(gameState, "currentStateName") && gameState.currentStateName == playingId) isPlaying = true;
+		}
+
+		var isMenuOpen = false;
+		if(is_struct(menus) && variable_struct_exists(menus, "isOpen"))
+		{
+			isMenuOpen = menus.isOpen;
+		}
+
+		var canConsoleOpen = isPlaying && !isMenuOpen;
+
+		if(is_struct(debugConsole) && variable_struct_exists(debugConsole, "update"))
+		{
+			debugConsole.update(canConsoleOpen);
+
+			if(variable_struct_exists(debugConsole, "isOpen") && debugConsole.isOpen)
+			{
+				if(variable_struct_exists(debugConsole, "pauseWhenOpen") && debugConsole.pauseWhenOpen)
+				{
+					return;
+				}
+			}
 		}
 
 		input.update();
@@ -96,6 +202,16 @@ function AppController() constructor
 
 		scenes.drawGui();
 		menus.drawGui();
+
+		if(is_struct(debugConsole) && variable_struct_exists(debugConsole, "drawGui"))
+		{
+			if(debugConsole.isOpen)
+			{
+				var guiW = display_get_gui_width();
+				var guiH = display_get_gui_height();
+				debugConsole.drawGui(0, 0, guiW, guiH * 0.5);
+			}
+		}
 	};
 
 	onRoomStart = function()

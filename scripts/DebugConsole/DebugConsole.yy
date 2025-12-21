@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"DebugConsole",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"DebugConsole",
+  "parent":{
+    "name":"Features",
+    "path":"folders/Scripts/Features.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
