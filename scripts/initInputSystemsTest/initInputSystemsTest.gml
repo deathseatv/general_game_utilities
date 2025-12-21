@@ -1,3 +1,78 @@
+function gmtlIisHasGlobal(name)
+{
+	return variable_struct_exists(global, name);
+}
+
+function gmtlIisGetGlobal(name)
+{
+	if(!gmtlIisHasGlobal(name))
+	{
+		return undefined;
+	}
+
+	return global[$ name];
+}
+
+function gmtlIisSetGlobal(name, value)
+{
+	global[$ name] = value;
+}
+
+function gmtlIisRemoveGlobal(name)
+{
+	if(gmtlIisHasGlobal(name))
+	{
+		variable_struct_remove(global, name);
+	}
+}
+
+function gmtlIisSnapshotGlobals()
+{
+	var names =
+	[
+		"input",
+		"events",
+		"eventBus"
+	];
+
+	var snap =
+	{
+		names : names,
+		exists : [],
+		values : []
+	};
+
+	var n = array_length(names);
+
+	for(var i = 0; i < n; i += 1)
+	{
+		var key = names[i];
+		snap.exists[i] = gmtlIisHasGlobal(key);
+		snap.values[i] = gmtlIisGetGlobal(key);
+	}
+
+	return snap;
+}
+
+function gmtlIisRestoreGlobals(snap)
+{
+	var n = array_length(snap.names);
+
+	for(var i = 0; i < n; i += 1)
+	{
+		var key = snap.names[i];
+
+		if(snap.exists[i])
+		{
+			gmtlIisSetGlobal(key, snap.values[i]);
+		}
+		else
+		{
+			gmtlIisRemoveGlobal(key);
+		}
+	}
+}
+
 function gmtlInitInputInSystemsTests_safe3()
 {
 	suite(function()
@@ -6,9 +81,11 @@ function gmtlInitInputInSystemsTests_safe3()
 		{
 			test("returns false when input invalid and no global.input", function()
 			{
-				global.input = undefined;
-				global.events = undefined;
-				global.eventBus = undefined;
+				var snap = gmtlIisSnapshotGlobals();
+
+				gmtlIisRemoveGlobal("input");
+				gmtlIisRemoveGlobal("events");
+				gmtlIisRemoveGlobal("eventBus");
 
 				var bus =
 				{
@@ -18,12 +95,40 @@ function gmtlInitInputInSystemsTests_safe3()
 
 				var ok = initInputInSystems(undefined, bus);
 				expect(ok).toBeFalsy();
+
+				gmtlIisRestoreGlobals(snap);
+			});
+
+			test("returns false when input missing addSignal", function()
+			{
+				var snap = gmtlIisSnapshotGlobals();
+
+				var input =
+				{
+					keyPressed : function(vk)
+					{
+						return function(raw) { return 0; };
+					}
+				};
+
+				var bus =
+				{
+					emit : function(eventName, payload, sender) { return 1; },
+					on : function(eventName, handler, ctx) { return function() { }; }
+				};
+
+				var ok = initInputInSystems(input, bus);
+				expect(ok).toBeFalsy();
+
+				gmtlIisRestoreGlobals(snap);
 			});
 
 			test("falls back to global.input when input arg invalid", function()
 			{
-				global.events = undefined;
-				global.eventBus = undefined;
+				var snap = gmtlIisSnapshotGlobals();
+
+				gmtlIisRemoveGlobal("events");
+				gmtlIisRemoveGlobal("eventBus");
 
 				global.input =
 				{
@@ -56,12 +161,16 @@ function gmtlInitInputInSystemsTests_safe3()
 
 				expect(ok).toBeTruthy();
 				expect(array_length(global.input.addCalls)).toBe(2);
+
+				gmtlIisRestoreGlobals(snap);
 			});
 
 			test("when bus valid, sets bus and binds pause/recenter", function()
 			{
-				global.events = undefined;
-				global.eventBus = undefined;
+				var snap = gmtlIisSnapshotGlobals();
+
+				gmtlIisRemoveGlobal("events");
+				gmtlIisRemoveGlobal("eventBus");
 
 				var input =
 				{
@@ -123,10 +232,49 @@ function gmtlInitInputInSystemsTests_safe3()
 				expect(input.bindCalls[0].pressedEventName).toBe("game/pause");
 				expect(input.bindCalls[1].signalName).toBe("recenter");
 				expect(input.bindCalls[1].pressedEventName).toBe("camera/recenter");
+
+				gmtlIisRestoreGlobals(snap);
+			});
+
+			test("when input has no keyPressed, still adds callable mappers", function()
+			{
+				var snap = gmtlIisSnapshotGlobals();
+
+				var input =
+				{
+					addCalls : [],
+
+					addSignal : function(signalName, mapperFn)
+					{
+						var n = array_length(self.addCalls);
+						self.addCalls[n] =
+						{
+							signalName : signalName,
+							mapperFn : mapperFn
+						};
+					}
+				};
+
+				var bus =
+				{
+					emit : function(eventName, payload, sender) { return 1; },
+					on : function(eventName, handler, ctx) { return function() { }; }
+				};
+
+				var ok = initInputInSystems(input, bus);
+
+				expect(ok).toBeTruthy();
+				expect(array_length(input.addCalls)).toBe(2);
+				expect(is_callable(input.addCalls[0].mapperFn)).toBeTruthy();
+				expect(is_callable(input.addCalls[1].mapperFn)).toBeTruthy();
+
+				gmtlIisRestoreGlobals(snap);
 			});
 
 			test("uses global.events when events arg invalid", function()
 			{
+				var snap = gmtlIisSnapshotGlobals();
+
 				var bus =
 				{
 					emit : function(eventName, payload, sender) { return 1; },
@@ -166,6 +314,8 @@ function gmtlInitInputInSystemsTests_safe3()
 				expect(ok).toBeTruthy();
 				expect(input.eventBus).toBe(bus);
 				expect(array_length(input.bindCalls)).toBe(2);
+
+				gmtlIisRestoreGlobals(snap);
 			});
 		});
 	});

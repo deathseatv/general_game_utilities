@@ -146,17 +146,13 @@ function MenuManager() constructor
 			return false;
 		}
 
-		currentMenuId = menuStack[n - 1];
+		var prevMenuId = menuStack[n - 1];
+		array_delete(menuStack, n - 1, 1);
+		currentMenuId = prevMenuId;
 
-		var next = [];
-		for(var i = 0; i < n - 1; i += 1)
-		{
-			next[i] = menuStack[i];
-		}
-
-		menuStack = next;
 		selectedIndex = 0;
 		hoverIndex = -1;
+		inputLockFrames = 1;
 
 		return true;
 	};
@@ -491,7 +487,7 @@ function MenuManager() constructor
 
 	back = function()
 	{
-		var menu = getMenu();
+		var menu = self.getMenu();
 
 		if(is_undefined(menu))
 		{

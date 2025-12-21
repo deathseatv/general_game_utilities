@@ -370,6 +370,10 @@ suite(function() { return;
 			simulateFrameWait(10);
 			expect(variable_global_exists("__gmtl_demo_internal_value")).toBeTruthy();
 			expect(global.__gmtl_demo_internal_value).toBeEqual(33);
+			
+			if (variable_struct_exists(global, "__gmtl_demo_internal_value")) {
+				variable_struct_remove(global, "__gmtl_demo_internal_value");
+			}
 		});
 		
 		describe("A describe inside another describe.", function () {
@@ -377,7 +381,7 @@ suite(function() { return;
 				expect(1).toBeEqual(1);
 			});
 			
-			it("This should always fail", function () {
+			skip("This used to be an intentionally failing demo test", function () {
 				expect(1 + 2).toBeEqual(5);
 			});
 		});

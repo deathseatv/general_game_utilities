@@ -12,6 +12,11 @@ function initInputInSystems(input, events)
 		}
 	}
 
+	if(!variable_struct_exists(input, "addSignal") || !is_callable(input.addSignal))
+	{
+		return false;
+	}
+
 	var isValidBus = function(bus)
 	{
 		return is_struct(bus)
@@ -38,12 +43,15 @@ function initInputInSystems(input, events)
 	var pauseMapper = undefined;
 	var recenterMapper = undefined;
 
-	if(variable_struct_exists(input, "keyPressed"))
+	var hasKeyPressed = variable_struct_exists(input, "keyPressed") && is_callable(input.keyPressed);
+
+	if(hasKeyPressed)
 	{
 		pauseMapper = input.keyPressed(vk_escape);
 		recenterMapper = input.keyPressed(vk_space);
 	}
-	else
+
+	if(!is_callable(pauseMapper) || !is_callable(recenterMapper))
 	{
 		var pauseToken =
 		{
@@ -73,7 +81,7 @@ function initInputInSystems(input, events)
 		return true;
 	}
 
-	if(variable_struct_exists(input, "setEventBus"))
+	if(variable_struct_exists(input, "setEventBus") && is_callable(input.setEventBus))
 	{
 		input.setEventBus(events);
 	}
@@ -82,7 +90,7 @@ function initInputInSystems(input, events)
 		input.eventBus = events;
 	}
 
-	if(variable_struct_exists(input, "bindSignal"))
+	if(variable_struct_exists(input, "bindSignal") && is_callable(input.bindSignal))
 	{
 		input.bindSignal("pause", "game/pause", "", "");
 		input.bindSignal("recenter", "camera/recenter", "", "");

@@ -90,14 +90,7 @@ function GameStateManager() constructor
 		}
 
 		var prev = stack[n - 1];
-
-		var nextStack = [];
-		for(var i = 0; i < n - 1; i += 1)
-		{
-			nextStack[i] = stack[i];
-		}
-
-		stack = nextStack;
+		array_delete(stack, n - 1, 1);
 
 		return setState(prev);
 	};

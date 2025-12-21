@@ -95,7 +95,7 @@ function EventBus() constructor
 		{
 			if(bucket[i].id == subId)
 			{
-				bucket = array_delete(bucket, i, 1);
+				array_delete(bucket, i, 1);
 				listeners[$ eventName] = bucket;
 				return true;
 			}
@@ -135,7 +135,7 @@ function EventBus() constructor
 
 			if(sub.once)
 			{
-				bucket = array_delete(bucket, i, 1);
+				array_delete(bucket, i, 1);
 			}
 		}
 
