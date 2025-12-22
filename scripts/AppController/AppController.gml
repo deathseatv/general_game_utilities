@@ -71,6 +71,11 @@ function AppController() constructor
 
 		initInputInSystems(input, events);
 
+		if(is_struct(events))
+		{
+			events.on("video/toggleFullscreen", method(self, self.onToggleFullscreen));
+		}
+
 		settings.apply();
 
 		self.initDebugConsole();
@@ -138,6 +143,13 @@ function AppController() constructor
 		debugConsole.log("Console ready. Type 'help'.");
 	};
 
+
+	onToggleFullscreen = function(payload, eventName, sender)
+	{
+		var isFs = window_get_fullscreen();
+		window_set_fullscreen(!isFs);
+	};
+
 	update = function()
 	{
 		if(!booted)
@@ -178,6 +190,11 @@ function AppController() constructor
 		if(is_struct(debugConsole) && variable_struct_exists(debugConsole, "update"))
 		{
 			debugConsole.update(canConsoleOpen);
+
+			if(variable_struct_exists(debugConsole, "consumed") && debugConsole.consumed)
+			{
+				return;
+			}
 
 			if(variable_struct_exists(debugConsole, "isOpen") && debugConsole.isOpen)
 			{

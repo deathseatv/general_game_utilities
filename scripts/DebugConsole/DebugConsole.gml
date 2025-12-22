@@ -5,6 +5,8 @@ function DebugConsole() constructor
 
 	openKey = 192;
 
+	consumed = false;
+
 	maxLines = 200;
 	lines = [];
 
@@ -105,9 +107,12 @@ function DebugConsole() constructor
 
 	update = function(canOpen)
 	{
+		consumed = false;
+
 		if(keyboard_check_pressed(openKey))
 		{
 			toggle(canOpen);
+			consumed = true;
 			return;
 		}
 
@@ -119,6 +124,14 @@ function DebugConsole() constructor
 		if(!canOpen)
 		{
 			close();
+			consumed = true;
+			return;
+		}
+
+		if(keyboard_check_pressed(vk_escape))
+		{
+			close();
+			consumed = true;
 			return;
 		}
 
@@ -127,6 +140,9 @@ function DebugConsole() constructor
 			var line = keyboard_string;
 			keyboard_string = "";
 			execLine(line);
+
+			consumed = true;
+			return;
 		}
 	};
 

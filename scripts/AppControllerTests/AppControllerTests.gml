@@ -318,8 +318,8 @@ function gmtlAppControllerTests_safe4()
 				// Your AppController only sets global.eventBus in the "new EventBus()" branch.
 				expect(gmtlAc4HasGlobal("eventBus")).toBeFalsy();
 
-				expect(array_length(global.input.addCalls)).toBe(2);
-				expect(array_length(global.input.bindCalls)).toBe(2);
+				expect(array_length(global.input.addCalls)).toBe(3);
+				expect(array_length(global.input.bindCalls)).toBe(3);
 
 				expect(global.settings.applyCalls).toBe(1);
 

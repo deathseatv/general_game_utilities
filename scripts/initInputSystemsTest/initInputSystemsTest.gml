@@ -160,7 +160,7 @@ function gmtlInitInputInSystemsTests_safe3()
 				var ok = initInputInSystems(undefined, bus);
 
 				expect(ok).toBeTruthy();
-				expect(array_length(global.input.addCalls)).toBe(2);
+				expect(array_length(global.input.addCalls)).toBe(3);
 
 				gmtlIisRestoreGlobals(snap);
 			});
@@ -222,16 +222,19 @@ function gmtlInitInputInSystemsTests_safe3()
 				var ok = initInputInSystems(input, bus);
 
 				expect(ok).toBeTruthy();
-				expect(array_length(input.addCalls)).toBe(2);
+				expect(array_length(input.addCalls)).toBe(3);
 
 				expect(array_length(input.setBusCalls)).toBe(1);
 				expect(input.eventBus).toBe(bus);
 
-				expect(array_length(input.bindCalls)).toBe(2);
+				expect(array_length(input.bindCalls)).toBe(3);
 				expect(input.bindCalls[0].signalName).toBe("pause");
 				expect(input.bindCalls[0].pressedEventName).toBe("game/pause");
 				expect(input.bindCalls[1].signalName).toBe("recenter");
 				expect(input.bindCalls[1].pressedEventName).toBe("camera/recenter");
+
+				expect(input.bindCalls[2].signalName).toBe("toggleFullscreen");
+				expect(input.bindCalls[2].pressedEventName).toBe("video/toggleFullscreen");
 
 				gmtlIisRestoreGlobals(snap);
 			});
@@ -264,9 +267,10 @@ function gmtlInitInputInSystemsTests_safe3()
 				var ok = initInputInSystems(input, bus);
 
 				expect(ok).toBeTruthy();
-				expect(array_length(input.addCalls)).toBe(2);
+				expect(array_length(input.addCalls)).toBe(3);
 				expect(is_callable(input.addCalls[0].mapperFn)).toBeTruthy();
 				expect(is_callable(input.addCalls[1].mapperFn)).toBeTruthy();
+				expect(is_callable(input.addCalls[2].mapperFn)).toBeTruthy();
 
 				gmtlIisRestoreGlobals(snap);
 			});
@@ -313,7 +317,7 @@ function gmtlInitInputInSystemsTests_safe3()
 
 				expect(ok).toBeTruthy();
 				expect(input.eventBus).toBe(bus);
-				expect(array_length(input.bindCalls)).toBe(2);
+				expect(array_length(input.bindCalls)).toBe(3);
 
 				gmtlIisRestoreGlobals(snap);
 			});

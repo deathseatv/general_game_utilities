@@ -42,6 +42,7 @@ function initInputInSystems(input, events)
 
 	var pauseMapper = undefined;
 	var recenterMapper = undefined;
+	var fullscreenMapper = undefined;
 
 	var hasKeyPressed = variable_struct_exists(input, "keyPressed") && is_callable(input.keyPressed);
 
@@ -49,9 +50,10 @@ function initInputInSystems(input, events)
 	{
 		pauseMapper = input.keyPressed(vk_escape);
 		recenterMapper = input.keyPressed(vk_space);
+		fullscreenMapper = input.keyPressed(vk_f10);
 	}
 
-	if(!is_callable(pauseMapper) || !is_callable(recenterMapper))
+	if(!is_callable(pauseMapper) || !is_callable(recenterMapper) || !is_callable(fullscreenMapper))
 	{
 		var pauseToken =
 		{
@@ -69,12 +71,22 @@ function initInputInSystems(input, events)
 			}
 		};
 
+		var fullscreenToken =
+		{
+			run : function(raw)
+			{
+				return keyboard_check_pressed(vk_f10) ? 1 : 0;
+			}
+		};
+
 		pauseMapper = method(pauseToken, pauseToken.run);
 		recenterMapper = method(recenterToken, recenterToken.run);
+		fullscreenMapper = method(fullscreenToken, fullscreenToken.run);
 	}
 
 	input.addSignal("pause", pauseMapper);
 	input.addSignal("recenter", recenterMapper);
+	input.addSignal("toggleFullscreen", fullscreenMapper);
 
 	if(!isValidBus(events))
 	{
@@ -94,6 +106,7 @@ function initInputInSystems(input, events)
 	{
 		input.bindSignal("pause", "game/pause", "", "");
 		input.bindSignal("recenter", "camera/recenter", "", "");
+		input.bindSignal("toggleFullscreen", "video/toggleFullscreen", "", "");
 	}
 
 	return true;

@@ -30,6 +30,10 @@ function MenuManager() constructor
 	soundVolume = 1.0;
 	musicVolume = 1.0;
 
+	uiHoverSoundName = "snd_ui_hover";
+	uiSelectSoundName = "snd_ui_select";
+	lastSelectedIndex = -1;
+
 	setVersion = function(v)
 	{
 		versionString = string(v);
@@ -75,6 +79,7 @@ function MenuManager() constructor
 	{
 		isOpen = true;
 		inputLockFrames = 1;
+		lastSelectedIndex = -1;
 	};
 
 	close = function()
@@ -86,6 +91,7 @@ function MenuManager() constructor
 		hoverIndex = -1;
 		currentItemRects = [];
 		inputLockFrames = 0;
+		lastSelectedIndex = -1;
 	};
 
 	show = function(menuId)
@@ -106,6 +112,9 @@ function MenuManager() constructor
 		hoverIndex = -1;
 		menuStack = [];
 		inputLockFrames = 1;
+
+		self.selectFirstInteractive();
+		lastSelectedIndex = -1;
 
 		return true;
 	};
@@ -134,6 +143,9 @@ function MenuManager() constructor
 		hoverIndex = -1;
 		inputLockFrames = 1;
 
+		self.selectFirstInteractive();
+		lastSelectedIndex = -1;
+
 		return true;
 	};
 
@@ -153,6 +165,9 @@ function MenuManager() constructor
 		selectedIndex = 0;
 		hoverIndex = -1;
 		inputLockFrames = 1;
+
+		self.selectFirstInteractive();
+		lastSelectedIndex = -1;
 
 		return true;
 	};
@@ -341,6 +356,33 @@ function MenuManager() constructor
 		return true;
 	};
 
+
+	addLabelItem = function()
+	{
+		var menuId = (argument_count > 0) ? argument[0] : "";
+		var label = (argument_count > 1) ? argument[1] : "";
+
+		if(!variable_struct_exists(menus, menuId))
+		{
+			return false;
+		}
+
+		var item =
+		{
+			type : "label",
+			label : string(label)
+		};
+
+		var menu = menus[$ menuId];
+		var items = menu.items;
+		items[array_length(items)] = item;
+		menu.items = items;
+		menus[$ menuId] = menu;
+
+		return true;
+	};
+
+
 	clamp01 = function(v)
 	{
 		if(v < 0) { return 0; }
@@ -380,6 +422,83 @@ function MenuManager() constructor
 		}
 	};
 
+
+	setUiSounds = function(hoverName, selectName)
+	{
+		if(!is_undefined(hoverName))
+		{
+			uiHoverSoundName = string(hoverName);
+		}
+
+		if(!is_undefined(selectName))
+		{
+			uiSelectSoundName = string(selectName);
+		}
+	};
+
+	resolveSoundId = function(soundName)
+	{
+		if(is_undefined(soundName) || soundName == "")
+		{
+			return noone;
+		}
+
+			var assetId = asset_get_index(soundName);
+			if(assetId < 0)
+			{
+				return noone;
+			}
+
+			return assetId;
+	};
+
+	emitUiSound = function(soundName)
+	{
+		if(is_undefined(eventBus))
+		{
+			return;
+		}
+
+		var sid = resolveSoundId(soundName);
+		if(sid == noone)
+		{
+			return;
+		}
+
+		eventBus.emit("audio/playUi", { sound : sid }, noone);
+	};
+
+	isItemInteractive = function(item)
+	{
+		if(is_undefined(item))
+		{
+			return false;
+		}
+
+		if(variable_struct_exists(item, "enabled") && !item.enabled)
+		{
+			return false;
+		}
+
+		if(variable_struct_exists(item, "type") && item.type == "label")
+		{
+			return false;
+		}
+
+		return true;
+	};
+
+	playHoverSound = function()
+	{
+		emitUiSound(uiHoverSoundName);
+	};
+
+	playSelectSound = function()
+	{
+		emitUiSound(uiSelectSoundName);
+	};
+
+
 	getItemCount = function(menu)
 	{
 		if(is_undefined(menu))
@@ -390,28 +509,71 @@ function MenuManager() constructor
 		return array_length(menu.items);
 	};
 
+
+	selectFirstInteractive = function()
+	{
+		var menu = self.getMenu();
+
+		if(is_undefined(menu))
+		{
+			selectedIndex = 0;
+			return;
+		}
+
+		var count = array_length(menu.items);
+
+		for(var i = 0; i < count; i += 1)
+		{
+			if(self.isItemInteractive(menu.items[i]))
+			{
+				selectedIndex = i;
+				return;
+			}
+		}
+
+		selectedIndex = 0;
+	};
+
+
 	moveSelection = function(dir)
 	{
 		var menu = self.getMenu();
-		var count = self.getItemCount(menu);
+
+		if(is_undefined(menu))
+		{
+			return;
+		}
+
+		var count = array_length(menu.items);
 
 		if(count <= 0)
 		{
 			return;
 		}
 
-		var next = selectedIndex + dir;
+		var next = selectedIndex;
 
-		if(next < 0)
+		for(var attempts = 0; attempts < count; attempts += 1)
 		{
-			next = count - 1;
-		}
-		else if(next >= count)
-		{
-			next = 0;
+			next += dir;
+
+			if(next < 0)
+			{
+				next = count - 1;
+			}
+			else if(next >= count)
+			{
+				next = 0;
+			}
+
+			if(self.isItemInteractive(menu.items[next]))
+			{
+				selectedIndex = next;
+				return;
+			}
 		}
 
-		selectedIndex = next;
+		selectedIndex = clamp(selectedIndex, 0, count - 1);
 	};
 
 	activateSelection = function()
@@ -444,6 +606,7 @@ function MenuManager() constructor
 
 		if(item.type == "action")
 		{
+			self.playSelectSound();
 			item.action();
 		}
 	};
@@ -536,8 +699,17 @@ function MenuManager() constructor
 
 			if(mx >= r.x1 && mx <= r.x2 && my >= r.y1 && my <= r.y2)
 			{
-				hoverIndex = i;
-				selectedIndex = i;
+				var menu = self.getMenu();
+				if(!is_undefined(menu) && i >= 0 && i < array_length(menu.items))
+				{
+					var item = menu.items[i];
+					if(self.isItemInteractive(item))
+					{
+						hoverIndex = i;
+						selectedIndex = i;
+					}
+				}
+
 				return;
 			}
 		}
@@ -597,6 +769,23 @@ function MenuManager() constructor
 		if(keyboard_check_pressed(vk_right))
 		{
 			self.adjustSelection(1);
+		}
+
+
+		var count = array_length(menu.items);
+
+		if(count > 0 && selectedIndex >= 0 && selectedIndex < count && selectedIndex != lastSelectedIndex)
+		{
+			if(lastSelectedIndex != -1)
+			{
+				var item = menu.items[selectedIndex];
+				if(self.isItemInteractive(item))
+				{
+					self.playHoverSound();
+				}
+			}
+
+			lastSelectedIndex = selectedIndex;
 		}
 
 		if(keyboard_check_pressed(vk_enter) || keyboard_check_pressed(vk_space))
@@ -753,10 +942,15 @@ function MenuManager() constructor
 
 
 		self.addSubmenuItem("options", "Volume", "volume");
-		self.addActionItem("options", "Keybinds (stub)", method(self, self.actionKeybindsStub));
+		self.addSubmenuItem("options", "Keybinds", "keybinds");
 
 		self.addRangeItem("volume", "Sound", method(self, self.getSoundVolume), method(self, self.setSoundVolume), { step : 0.05 });
 		self.addRangeItem("volume", "Music", method(self, self.getMusicVolume), method(self, self.setMusicVolume), { step : 0.05 });
+
+		self.addLabelItem("keybinds", "Pause: Esc");
+		self.addLabelItem("keybinds", "Recenter: Space");
+		self.addLabelItem("keybinds", "Toggle Fullscreen: F10");
+		self.addLabelItem("keybinds", "Debug Console: `");
 
 		self.addSubmenuItem("pause", "Options", "options");
 		self.addActionItem("pause", "Main Menu", method(self, self.actionMainMenu));
