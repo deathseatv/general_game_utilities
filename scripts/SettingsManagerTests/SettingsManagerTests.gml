@@ -115,6 +115,21 @@ function gmtlSettingsTests()
 				expect(sm.values.sfxVolume).toBe(1.0);
 			});
 
+			test("fullscreen can be set and serializes", function()
+			{
+				var sm = new SettingsManager();
+				var ok = sm.set("fullscreen", true);
+				expect(ok).toBeTruthy();
+				expect(sm.values.fullscreen).toBeTruthy();
+
+				var s = sm.toStruct();
+				expect(s.fullscreen).toBeTruthy();
+
+				var sm2 = new SettingsManager();
+				sm2.fromStruct(s);
+				expect(sm2.values.fullscreen).toBeTruthy();
+			});
+
 			test("apply emits audio/setVolume and settings/applied", function()
 			{
 				var sm = new SettingsManager();

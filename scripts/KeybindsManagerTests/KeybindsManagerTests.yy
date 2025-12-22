@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"KeybindsManagerTests",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"KeybindsManagerTests",
+  "parent":{
+    "name":"Managers",
+    "path":"folders/TestSuite/Managers.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

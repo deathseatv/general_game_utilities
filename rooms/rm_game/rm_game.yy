@@ -17,8 +17,8 @@
   ],
   "name":"rm_game",
   "parent":{
-    "name":"Objects",
-    "path":"folders/Objects.yy",
+    "name":"00Temp",
+    "path":"folders/Scripts/00Temp.yy",
   },
   "parentRoom":null,
   "physicsSettings":{

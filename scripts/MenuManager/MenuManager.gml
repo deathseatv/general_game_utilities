@@ -1,6 +1,7 @@
 function MenuManager() constructor
 {
 	eventBus = undefined;
+	keybinds = undefined;
 	inputLockFrames = 0;
 
 	isOpen = false;
@@ -34,6 +35,9 @@ function MenuManager() constructor
 	uiSelectSoundName = "snd_ui_select";
 	lastSelectedIndex = -1;
 
+	isCapturingKey = false;
+	captureActionName = "";
+
 	setVersion = function(v)
 	{
 		versionString = string(v);
@@ -43,12 +47,78 @@ function MenuManager() constructor
 	{
 		eventBus = bus;
 
+		if(variable_global_exists("keybinds") && is_struct(global.keybinds))
+		{
+			keybinds = global.keybinds;
+		}
+
 		if(!is_undefined(eventBus))
 		{
 			eventBus.on("menu/open", method(self, self.onOpen));
 			eventBus.on("menu/close", method(self, self.onClose));
 			eventBus.on("menu/show", method(self, self.onShow));
 			eventBus.on("menu/loading", method(self, self.onLoading));
+			eventBus.on("settings/changed", method(self, self.onSettingsChanged));
+		}
+
+		self.syncVolumesFromSettings();
+	};
+
+	setKeybinds = function(kb)
+	{
+		if(is_struct(kb))
+		{
+			keybinds = kb;
+		}
+	};
+
+	getKeybinds = function()
+	{
+		if(is_struct(keybinds))
+		{
+			return keybinds;
+		}
+
+		if(variable_global_exists("keybinds") && is_struct(global.keybinds))
+		{
+			return global.keybinds;
+		}
+
+		return undefined;
+	};
+
+	onSettingsChanged = function(payload, eventName, sender)
+	{
+		if(!is_struct(payload) || !variable_struct_exists(payload, "key") || !variable_struct_exists(payload, "value"))
+		{
+			return;
+		}
+
+		if(payload.key == "sfxVolume" && is_real(payload.value))
+		{
+			soundVolume = payload.value;
+		}
+		else if(payload.key == "musicVolume" && is_real(payload.value))
+		{
+			musicVolume = payload.value;
+		}
+	};
+
+	syncVolumesFromSettings = function()
+	{
+		if(!variable_global_exists("settings") || !is_struct(global.settings))
+		{
+			return;
+		}
+
+		var sm = global.settings;
+		if(variable_struct_exists(sm, "get") && is_callable(sm.get))
+		{
+			var sv = sm.get("sfxVolume");
+			var mv = sm.get("musicVolume");
+
+			if(is_real(sv)) soundVolume = sv;
+			if(is_real(mv)) musicVolume = mv;
 		}
 	};
 
@@ -382,6 +452,45 @@ function MenuManager() constructor
 		return true;
 	};
 
+	addKeybindItem = function()
+	{
+		var menuId = (argument_count > 0) ? argument[0] : "";
+		var label = (argument_count > 1) ? argument[1] : "";
+		var actionName = (argument_count > 2) ? argument[2] : "";
+		var opts = (argument_count > 3) ? argument[3] : undefined;
+
+		if(!variable_struct_exists(menus, menuId))
+		{
+			return false;
+		}
+
+		if(is_undefined(actionName) || actionName == "")
+		{
+			return false;
+		}
+
+		var item =
+		{
+			type : "keybind",
+			label : string(label),
+			actionName : string(actionName),
+			enabled : true
+		};
+
+		if(is_struct(opts) && variable_struct_exists(opts, "enabled"))
+		{
+			item.enabled = opts.enabled;
+		}
+
+		var menu = menus[$ menuId];
+		var items = menu.items;
+		items[array_length(items)] = item;
+		menu.items = items;
+		menus[$ menuId] = menu;
+
+		return true;
+	};
+
 
 	clamp01 = function(v)
 	{
@@ -498,6 +607,128 @@ function MenuManager() constructor
 		emitUiSound(uiSelectSoundName);
 	};
 
+	getKeyForAction = function(actionName, fallbackKey)
+	{
+		var vk = fallbackKey;
+		var kb = getKeybinds();
+
+		if(is_struct(kb) && variable_struct_exists(kb, "getKey") && is_callable(kb.getKey))
+		{
+			var v = kb.getKey(actionName);
+			if(is_real(v))
+			{
+				vk = floor(v);
+			}
+		}
+
+		return vk;
+	};
+
+	fallbackKeyForAction = function(actionName)
+	{
+		switch(string(actionName))
+		{
+			case "pause": return vk_escape;
+			case "recenter": return vk_space;
+			case "toggleFullscreen": return vk_f10;
+		}
+
+		return 0;
+	};
+
+	keyNameForCode = function(vk)
+	{
+		switch(vk)
+		{
+			case vk_escape: return "Esc";
+			case vk_space: return "Space";
+			case vk_enter: return "Enter";
+			case vk_tab: return "Tab";
+			case vk_backspace: return "Backspace";
+			case vk_up: return "Up";
+			case vk_down: return "Down";
+			case vk_left: return "Left";
+			case vk_right: return "Right";
+			case vk_f1: return "F1";
+			case vk_f2: return "F2";
+			case vk_f3: return "F3";
+			case vk_f4: return "F4";
+			case vk_f5: return "F5";
+			case vk_f6: return "F6";
+			case vk_f7: return "F7";
+			case vk_f8: return "F8";
+			case vk_f9: return "F9";
+			case vk_f10: return "F10";
+			case vk_f11: return "F11";
+			case vk_f12: return "F12";
+		}
+
+		if(is_real(vk))
+		{
+			var cA = ord("A");
+			var cZ = ord("Z");
+			var c0 = ord("0");
+			var c9 = ord("9");
+
+			if(vk >= cA && vk <= cZ)
+			{
+				return chr(vk);
+			}
+
+			if(vk >= c0 && vk <= c9)
+			{
+				return chr(vk);
+			}
+		}
+
+		return "Key " + string(vk);
+	};
+
+	beginKeyCapture = function(actionName)
+	{
+		isCapturingKey = true;
+		captureActionName = string(actionName);
+		keyboard_lastkey = 0;
+		inputLockFrames = 1;
+	};
+
+	endKeyCapture = function()
+	{
+		isCapturingKey = false;
+		captureActionName = "";
+		keyboard_lastkey = 0;
+		inputLockFrames = 1;
+	};
+
+	updateKeyCapture = function()
+	{
+		var k = keyboard_lastkey;
+		if(k == 0)
+		{
+			return;
+		}
+
+		keyboard_lastkey = 0;
+
+		if(k == vk_escape)
+		{
+			endKeyCapture();
+			return;
+		}
+
+		var kb = getKeybinds();
+		if(is_struct(kb) && variable_struct_exists(kb, "setKey") && is_callable(kb.setKey))
+		{
+			kb.setKey(captureActionName, k);
+			if(variable_struct_exists(kb, "save") && is_callable(kb.save))
+			{
+				kb.save();
+			}
+		}
+
+		endKeyCapture();
+	};
+
 
 	getItemCount = function(menu)
 	{
@@ -608,6 +839,11 @@ function MenuManager() constructor
 		{
 			self.playSelectSound();
 			item.action();
+		}
+		else if(item.type == "keybind")
+		{
+			self.playSelectSound();
+			self.beginKeyCapture(item.actionName);
 		}
 	};
 
@@ -746,6 +982,12 @@ function MenuManager() constructor
 				self.show("main");
 			}
 
+			return;
+		}
+
+		if(isCapturingKey)
+		{
+			self.updateKeyCapture();
 			return;
 		}
 
@@ -892,6 +1134,19 @@ function MenuManager() constructor
 				var pct = string_format(v * 100, 0, 0);
 				text = item.label + ": " + pct + "%";
 			}
+			else if(item.type == "keybind")
+			{
+				if(isCapturingKey && item.actionName == captureActionName)
+				{
+					text = item.label + ": [Press key]";
+				}
+				else
+				{
+					var fallback = self.fallbackKeyForAction(item.actionName);
+					var vk = self.getKeyForAction(item.actionName, fallback);
+					text = item.label + ": " + self.keyNameForCode(vk);
+				}
+			}
 
 			var _y = itemsY + (i * lineH);
 			var isSelected = (i == selectedIndex);
@@ -947,10 +1202,10 @@ function MenuManager() constructor
 		self.addRangeItem("volume", "Sound", method(self, self.getSoundVolume), method(self, self.setSoundVolume), { step : 0.05 });
 		self.addRangeItem("volume", "Music", method(self, self.getMusicVolume), method(self, self.setMusicVolume), { step : 0.05 });
 
-		self.addLabelItem("keybinds", "Pause: Esc");
-		self.addLabelItem("keybinds", "Recenter: Space");
-		self.addLabelItem("keybinds", "Toggle Fullscreen: F10");
-		self.addLabelItem("keybinds", "Debug Console: `");
+		self.addKeybindItem("keybinds", "Pause", "pause");
+		self.addKeybindItem("keybinds", "Recenter", "recenter");
+		self.addKeybindItem("keybinds", "Toggle Fullscreen", "toggleFullscreen");
+		self.addLabelItem("keybinds", "(Press Enter to rebind)");
 
 		self.addSubmenuItem("pause", "Options", "options");
 		self.addActionItem("pause", "Main Menu", method(self, self.actionMainMenu));

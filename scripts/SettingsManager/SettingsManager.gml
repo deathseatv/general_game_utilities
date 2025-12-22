@@ -7,7 +7,8 @@ function SettingsManager() constructor
 		masterVolume : 1.0,
 		musicVolume : 1.0,
 		sfxVolume : 1.0,
-		uiVolume : 1.0
+		uiVolume : 1.0,
+		fullscreen : false
 	};
 
 	values =
@@ -15,8 +16,11 @@ function SettingsManager() constructor
 		masterVolume : defaults.masterVolume,
 		musicVolume : defaults.musicVolume,
 		sfxVolume : defaults.sfxVolume,
-		uiVolume : defaults.uiVolume
+		uiVolume : defaults.uiVolume,
+		fullscreen : defaults.fullscreen
 	};
+
+	fileName = "settings.json";
 
 	clamp01 = function(v)
 	{
@@ -63,6 +67,21 @@ function SettingsManager() constructor
 
 			next = clamp01(next);
 		}
+		else if(key == "fullscreen")
+		{
+			if(is_bool(next))
+			{
+				// ok
+			}
+			else if(is_real(next))
+			{
+				next = (next != 0);
+			}
+			else
+			{
+				return false;
+			}
+		}
 
 		var prev = values[$ key];
 
@@ -90,6 +109,19 @@ function SettingsManager() constructor
 
 	apply = function()
 	{
+		applyAudio();
+		applyVideo();
+
+		if(!is_undefined(eventBus))
+		{
+			eventBus.emit("settings/applied", { }, noone);
+		}
+
+		save();
+	};
+
+	applyAudio = function()
+	{
 		if(is_undefined(eventBus))
 		{
 			return;
@@ -105,8 +137,11 @@ function SettingsManager() constructor
 			},
 			noone
 		);
+	};
 
-		eventBus.emit("settings/applied", { }, noone);
+	applyVideo = function()
+	{
+		window_set_fullscreen(values.fullscreen);
 	};
 
 	resetDefaults = function()
@@ -153,6 +188,188 @@ function SettingsManager() constructor
 		{
 			apply();
 		}
+	};
+
+	setFullscreen = function(isFullscreen)
+	{
+		if(set("fullscreen", isFullscreen))
+		{
+			applyVideo();
+			save();
+		}
+	};
+
+	toggleFullscreen = function()
+	{
+		setFullscreen(!values.fullscreen);
+	};
+
+	getSavePath = function()
+	{
+		return fileName;
+	};
+
+	toStruct = function()
+	{
+		return
+		{
+			masterVolume : values.masterVolume,
+			musicVolume : values.musicVolume,
+			sfxVolume : values.sfxVolume,
+			uiVolume : values.uiVolume,
+			fullscreen : values.fullscreen
+		};
+	};
+
+	setSilently = function(key, value)
+	{
+		if(!hasKey(key))
+		{
+			return false;
+		}
+
+		var next = value;
+
+		if(key == "masterVolume" || key == "musicVolume" || key == "sfxVolume" || key == "uiVolume")
+		{
+			if(!is_real(next))
+			{
+				return false;
+			}
+
+			next = clamp01(next);
+		}
+		else if(key == "fullscreen")
+		{
+			if(is_bool(next))
+			{
+				// ok
+			}
+			else if(is_real(next))
+			{
+				next = (next != 0);
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		if(values[$ key] == next)
+		{
+			return false;
+		}
+
+		values[$ key] = next;
+		return true;
+	};
+
+	fromStruct = function(s)
+	{
+		if(!is_struct(s))
+		{
+			return false;
+		}
+
+		var keys = variable_struct_get_names(defaults);
+		var n = array_length(keys);
+		var changed = false;
+
+		for(var i = 0; i < n; i += 1)
+		{
+			var k = keys[i];
+			if(variable_struct_exists(s, k))
+			{
+				if(setSilently(k, s[$ k]))
+				{
+					changed = true;
+				}
+			}
+		}
+
+		return changed;
+	};
+
+	readTextFile = function(path)
+	{
+		if(!file_exists(path))
+		{
+			return "";
+		}
+
+		var f = file_text_open_read(path);
+		if(f < 0)
+		{
+			return "";
+		}
+
+		var text = "";
+
+		while(!file_text_eof(f))
+		{
+			text += file_text_readln(f);
+			if(!file_text_eof(f))
+			{
+				text += "\n";
+			}
+		}
+
+		file_text_close(f);
+		return text;
+	};
+
+	writeTextFile = function(path, text)
+	{
+		var f = file_text_open_write(path);
+		if(f < 0)
+		{
+			return false;
+		}
+
+		file_text_write_string(f, string(text));
+		file_text_close(f);
+		return true;
+	};
+
+	load = function()
+	{
+		var path = getSavePath();
+		if(!file_exists(path))
+		{
+			return false;
+		}
+
+		var raw = readTextFile(path);
+		if(raw == "")
+		{
+			return false;
+		}
+
+		var data = json_parse(raw);
+		if(!is_struct(data))
+		{
+			return false;
+		}
+
+		if(variable_struct_exists(data, "settings") && is_struct(data.settings))
+		{
+			return fromStruct(data.settings);
+		}
+
+		return fromStruct(data);
+	};
+
+	save = function()
+	{
+		var path = getSavePath();
+		var data =
+		{
+			version : 1,
+			settings : toStruct()
+		};
+
+		var raw = json_stringify(data);
+		return writeTextFile(path, raw);
 	};
 
 	onSettingsSet = function(payload, eventName, sender)

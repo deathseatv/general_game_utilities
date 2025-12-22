@@ -38,8 +38,10 @@ function gmtlAc4SnapshotGlobals()
 		"scenes",
 		"gameState",
 		"settings",
+		"keybinds",
 		"time",
-		"camera"
+		"camera",
+		"debugConsole"
 	];
 
 	var snap =

@@ -14,8 +14,8 @@
   "exportDir":"",
   "name":"snd_ui_hover",
   "parent":{
-    "name":"Assets",
-    "path":"folders/Objects/Assets.yy",
+    "name":"00Temp",
+    "path":"folders/Scripts/00Temp.yy",
   },
   "preload":false,
   "resourceType":"GMSound",

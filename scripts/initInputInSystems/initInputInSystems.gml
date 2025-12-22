@@ -1,4 +1,4 @@
-function initInputInSystems(input, events)
+function initInputInSystems(input, events, keybinds)
 {
 	if(argument_count < 1 || !is_struct(input))
 	{
@@ -40,53 +40,51 @@ function initInputInSystems(input, events)
 		}
 	}
 
-	var pauseMapper = undefined;
-	var recenterMapper = undefined;
-	var fullscreenMapper = undefined;
-
-	var hasKeyPressed = variable_struct_exists(input, "keyPressed") && is_callable(input.keyPressed);
-
-	if(hasKeyPressed)
+	if(argument_count < 3 || !is_struct(keybinds))
 	{
-		pauseMapper = input.keyPressed(vk_escape);
-		recenterMapper = input.keyPressed(vk_space);
-		fullscreenMapper = input.keyPressed(vk_f10);
+		if(variable_global_exists("keybinds") && is_struct(global.keybinds))
+		{
+			keybinds = global.keybinds;
+		}
+		else
+		{
+			keybinds = undefined;
+		}
 	}
 
-	if(!is_callable(pauseMapper) || !is_callable(recenterMapper) || !is_callable(fullscreenMapper))
+	var makePressedMapper = function(actionName, fallbackKey)
 	{
-		var pauseToken =
+		var token =
 		{
+			actionName : actionName,
+			fallbackKey : fallbackKey,
+			keybinds : keybinds,
+
 			run : function(raw)
 			{
-				return keyboard_check_pressed(vk_escape) ? 1 : 0;
+				var vk = self.fallbackKey;
+
+				if(is_struct(self.keybinds)
+					&& variable_struct_exists(self.keybinds, "getKey")
+					&& is_callable(self.keybinds.getKey))
+				{
+					var v = self.keybinds.getKey(self.actionName);
+					if(is_real(v))
+					{
+						vk = floor(v);
+					}
+				}
+
+				return keyboard_check_pressed(vk) ? 1 : 0;
 			}
 		};
 
-		var recenterToken =
-		{
-			run : function(raw)
-			{
-				return keyboard_check_pressed(vk_space) ? 1 : 0;
-			}
-		};
+		return method(token, token.run);
+	};
 
-		var fullscreenToken =
-		{
-			run : function(raw)
-			{
-				return keyboard_check_pressed(vk_f10) ? 1 : 0;
-			}
-		};
-
-		pauseMapper = method(pauseToken, pauseToken.run);
-		recenterMapper = method(recenterToken, recenterToken.run);
-		fullscreenMapper = method(fullscreenToken, fullscreenToken.run);
-	}
-
-	input.addSignal("pause", pauseMapper);
-	input.addSignal("recenter", recenterMapper);
-	input.addSignal("toggleFullscreen", fullscreenMapper);
+	input.addSignal("pause", makePressedMapper("pause", vk_escape));
+	input.addSignal("recenter", makePressedMapper("recenter", vk_space));
+	input.addSignal("toggleFullscreen", makePressedMapper("toggleFullscreen", vk_f10));
 
 	if(!isValidBus(events))
 	{

@@ -8,6 +8,7 @@ function AppController() constructor
 	scenes = undefined;
 	gameState = undefined;
 	settings = undefined;
+	keybinds = undefined;
 	time = undefined;
 	camera = undefined;
 
@@ -46,6 +47,7 @@ function AppController() constructor
 		scenes = (variable_global_exists("scenes") && is_struct(global.scenes)) ? global.scenes : new SceneManager();
 		gameState = (variable_global_exists("gameState") && is_struct(global.gameState)) ? global.gameState : new GameStateManager();
 		settings = (variable_global_exists("settings") && is_struct(global.settings)) ? global.settings : new SettingsManager();
+		keybinds = (variable_global_exists("keybinds") && is_struct(global.keybinds)) ? global.keybinds : new KeybindsManager();
 		time = (variable_global_exists("time") && is_struct(global.time)) ? global.time : new TimeManager();
 		camera = (variable_global_exists("camera") && is_struct(global.camera)) ? global.camera : new CameraManager();
 
@@ -57,19 +59,33 @@ function AppController() constructor
 		global.scenes = scenes;
 		global.gameState = gameState;
 		global.settings = settings;
+		global.keybinds = keybinds;
 		global.time = time;
 		global.camera = camera;
 		global.debugConsole = debugConsole;
 
 		audio.init(events);
 		settings.init(events);
+		if(variable_struct_exists(settings, "load") && is_callable(settings.load))
+		{
+			settings.load();
+		}
+
+		if(variable_struct_exists(keybinds, "load") && is_callable(keybinds.load))
+		{
+			keybinds.load();
+		}
 		time.init(events);
 		scenes.init(events);
 		gameState.init(events);
 		menus.init(events);
+		if(variable_struct_exists(menus, "setKeybinds") && is_callable(menus.setKeybinds))
+		{
+			menus.setKeybinds(keybinds);
+		}
 		camera.init(events);
 
-		initInputInSystems(input, events);
+		initInputInSystems(input, events, keybinds);
 
 		if(is_struct(events))
 		{
@@ -146,6 +162,12 @@ function AppController() constructor
 
 	onToggleFullscreen = function(payload, eventName, sender)
 	{
+		if(is_struct(settings) && variable_struct_exists(settings, "toggleFullscreen") && is_callable(settings.toggleFullscreen))
+		{
+			settings.toggleFullscreen();
+			return;
+		}
+
 		var isFs = window_get_fullscreen();
 		window_set_fullscreen(!isFs);
 	};

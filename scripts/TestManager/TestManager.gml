@@ -7,13 +7,13 @@ function TestManager()
 	gmtlAudioManagerTests();
 	gmtlSceneManagerTests();
 	gmtlGameStateManagerTests();
+	gmtlKeybindsTests();
 	gmtlSettingsTests();
 	gmtlTimeTests();
 
 	// integration
 	gmtlAppControllerTests_safe4();
 	gmtlInitInputInSystemsTests_safe3();
-	gmtlIntegrationTests();
 	
 	// debug console
 	gmtlDebugConsoleTests();

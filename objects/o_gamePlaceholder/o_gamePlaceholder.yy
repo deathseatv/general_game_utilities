@@ -10,8 +10,8 @@
   "name":"o_gamePlaceholder",
   "overriddenProperties":[],
   "parent":{
-    "name":"Objects",
-    "path":"folders/Objects.yy",
+    "name":"00Temp",
+    "path":"folders/Scripts/00Temp.yy",
   },
   "parentObjectId":null,
   "persistent":false,

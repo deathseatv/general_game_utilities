@@ -17,8 +17,8 @@
   ],
   "name":"Room1",
   "parent":{
-    "name":"Objects",
-    "path":"folders/Objects.yy",
+    "name":"general_game_utilities",
+    "path":"general_game_utilities.yyp",
   },
   "parentRoom":null,
   "physicsSettings":{
