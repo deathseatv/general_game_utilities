@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"SaveGameManager",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"SaveGameManager",
+  "parent":{
+    "name":"Managers",
+    "path":"folders/Scripts/Managers.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

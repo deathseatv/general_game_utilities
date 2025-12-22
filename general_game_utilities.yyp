@@ -78,6 +78,8 @@
     {"id":{"name":"KeybindsManagerTests","path":"scripts/KeybindsManagerTests/KeybindsManagerTests.yy",},},
     {"id":{"name":"MenuManager","path":"scripts/MenuManager/MenuManager.yy",},},
     {"id":{"name":"MenuManagerTests","path":"scripts/MenuManagerTests/MenuManagerTests.yy",},},
+    {"id":{"name":"SaveGameManager","path":"scripts/SaveGameManager/SaveGameManager.yy",},},
+    {"id":{"name":"SaveGameManagerTests","path":"scripts/SaveGameManagerTests/SaveGameManagerTests.yy",},},
     {"id":{"name":"SceneManager","path":"scripts/SceneManager/SceneManager.yy",},},
     {"id":{"name":"SceneManagerTests","path":"scripts/SceneManagerTests/SceneManagerTests.yy",},},
     {"id":{"name":"SettingsManager","path":"scripts/SettingsManager/SettingsManager.yy",},},

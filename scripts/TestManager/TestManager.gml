@@ -10,6 +10,8 @@ function TestManager()
 	gmtlKeybindsTests();
 	gmtlSettingsTests();
 	gmtlTimeTests();
+	gmtlSaveGameTests();
+
 
 	// integration
 	gmtlAppControllerTests_safe4();
