@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"DebugConsole",
   "parent":{
-    "name":"Features",
-    "path":"folders/Scripts/Features.yy",
+    "name":"Debug",
+    "path":"folders/Scripts/Managers/Debug.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

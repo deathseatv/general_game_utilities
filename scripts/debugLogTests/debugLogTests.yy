@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"MenuManager",
+  "%Name":"debugLogTests",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"MenuManager",
+  "name":"debugLogTests",
   "parent":{
-    "name":"MenuSystem",
-    "path":"folders/Scripts/Managers/MenuSystem.yy",
+    "name":"Debug",
+    "path":"folders/TestSuite/Managers/Debug.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

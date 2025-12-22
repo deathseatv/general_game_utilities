@@ -13,4 +13,8 @@ function TestManager()
 	// integration
 	gmtlAppControllerTests_safe4();
 	gmtlInitInputInSystemsTests_safe3();
+	
+	// debug console
+	gmtlDebugConsoleTests();
+	gmtlDebugLogTests();
 }
