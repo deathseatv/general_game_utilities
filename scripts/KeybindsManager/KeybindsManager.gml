@@ -76,6 +76,11 @@ function KeybindsManager() constructor
 		}
 
 		var next = floor(vkCode);
+		if(next <= 0)
+		{
+			return false;
+		}
+
 		var prev = binds[$ actionName];
 
 		if(prev == next)
@@ -83,10 +88,10 @@ function KeybindsManager() constructor
 			return false;
 		}
 
-		var _other = findActionByKey(next);
-		if(_other != "" && _other != actionName)
+		var conflictAction = findActionByKey(next);
+		if(conflictAction != "" && conflictAction != actionName)
 		{
-			binds[$ _other] = prev;
+			binds[$ conflictAction] = prev;
 		}
 
 		binds[$ actionName] = next;
@@ -140,6 +145,11 @@ function KeybindsManager() constructor
 			if(variable_struct_exists(s, a) && is_real(s[$ a]))
 			{
 				var next = floor(s[$ a]);
+				if(next <= 0)
+				{
+					continue;
+				}
+
 				if(binds[$ a] != next)
 				{
 					binds[$ a] = next;
@@ -192,6 +202,59 @@ function KeybindsManager() constructor
 		return true;
 	};
 
+	safeWrite = function(path, text)
+	{
+		var tmp = path + ".tmp";
+		var bak = path + ".bak";
+
+		if(file_exists(tmp))
+		{
+			file_delete(tmp);
+		}
+
+		if(!writeTextFile(tmp, text))
+		{
+			return false;
+		}
+
+		var hadExisting = file_exists(path);
+
+		if(hadExisting)
+		{
+			if(file_exists(bak))
+			{
+				file_delete(bak);
+			}
+
+			if(!file_rename(path, bak))
+			{
+				if(file_exists(tmp))
+				{
+					file_delete(tmp);
+				}
+
+				return false;
+			}
+		}
+
+		if(!file_rename(tmp, path))
+		{
+			if(hadExisting && file_exists(bak) && !file_exists(path))
+			{
+				file_rename(bak, path);
+			}
+
+			if(file_exists(tmp))
+			{
+				file_delete(tmp);
+			}
+
+			return false;
+		}
+
+		return true;
+	};
+
 	load = function()
 	{
 		var path = getSavePath();
@@ -232,6 +295,6 @@ function KeybindsManager() constructor
 		};
 
 		var raw = json_stringify(data);
-		return writeTextFile(path, raw);
+		return safeWrite(path, raw);
 	};
 }

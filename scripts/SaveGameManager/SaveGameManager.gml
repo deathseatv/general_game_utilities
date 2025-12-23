@@ -273,6 +273,7 @@ function SaveGameManager() constructor
 	safeWrite = function(path, text, slot)
 	{
 		var tmp = makeTempFileName(slot);
+		var bak = path + ".bak";
 
 		if(file_exists(tmp))
 		{
@@ -285,15 +286,36 @@ function SaveGameManager() constructor
 			return false;
 		}
 
-		if(file_exists(path))
+		var hadExisting = file_exists(path);
+
+		if(hadExisting)
 		{
-			file_delete(path);
+			if(file_exists(bak))
+			{
+				file_delete(bak);
+			}
+
+			if(!file_rename(path, bak))
+			{
+				if(file_exists(tmp))
+				{
+					file_delete(tmp);
+				}
+
+				setError("Backup existing failed");
+				return false;
+			}
 		}
 
 		var ok = file_rename(tmp, path);
 
 		if(!ok)
 		{
+			if(hadExisting && file_exists(bak) && !file_exists(path))
+			{
+				file_rename(bak, path);
+			}
+
 			if(file_exists(tmp))
 			{
 				file_delete(tmp);

@@ -235,6 +235,58 @@ function gmtlSettingsTests()
 
 				expect(sm.values.sfxVolume).toBe(0.22);
 			});
+
+			test("save/load roundtrips settings (safe write)", function()
+			{
+				var path = "gmtl_settings_test.json";
+
+				if(file_exists(path))
+				{
+					file_delete(path);
+				}
+				if(file_exists(path + ".bak"))
+				{
+					file_delete(path + ".bak");
+				}
+				if(file_exists(path + ".tmp"))
+				{
+					file_delete(path + ".tmp");
+				}
+
+				var sm = new SettingsManager();
+				sm.fileName = path;
+
+				sm.set("musicVolume", 0.25);
+
+				var ok = sm.save();
+				expect(ok).toBeTruthy();
+				expect(file_exists(path)).toBeTruthy();
+
+				sm.set("musicVolume", 0.9);
+
+				ok = sm.load();
+				expect(ok).toBeTruthy();
+				expect(sm.values.musicVolume).toBe(0.25);
+
+				sm.set("musicVolume", 0.5);
+				ok = sm.save();
+
+				expect(ok).toBeTruthy();
+				expect(file_exists(path + ".bak")).toBeTruthy();
+
+				if(file_exists(path))
+				{
+					file_delete(path);
+				}
+				if(file_exists(path + ".bak"))
+				{
+					file_delete(path + ".bak");
+				}
+				if(file_exists(path + ".tmp"))
+				{
+					file_delete(path + ".tmp");
+				}
+			});
 		});
 	});
 }

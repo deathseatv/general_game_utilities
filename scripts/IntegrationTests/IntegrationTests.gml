@@ -272,6 +272,38 @@ function gmtlIntegrationTests()
 				expect(menusSpy.calls).toBe(1);
 				expect(scenesSpy.calls).toBe(1);
 			});
+
+			test("Input binding: invalid pause keybind (0) falls back to Esc", function()
+			{
+				var bus = new EventBus();
+
+				var spy = gmtlIntegrationMakeEventSpy();
+				bus.on("game/pause", spy.handler);
+
+				var input = new InputManager();
+
+				var keybinds =
+				{
+					getKey : function(actionName)
+					{
+						if(string(actionName) == "pause")
+						{
+							return 0;
+						}
+
+						return -1;
+					}
+				};
+
+				initInputInSystems(input, bus, keybinds);
+
+				simulateKeyPress(vk_escape);
+				input.update();
+				keyboard_clear(vk_escape);
+
+				expect(spy.count).toBe(1);
+				expect(spy.lastEventName).toBe("game/pause");
+			});
 		});
 	});
 }

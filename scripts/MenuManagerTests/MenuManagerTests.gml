@@ -239,6 +239,23 @@ function gmtlMenuManagerTests()
 				bus.emit("menu/close", { }, noone);
 				expect(mm.isOpen).toBeFalsy();
 			});
+
+			test("getKeyForAction falls back when keybind is invalid (0)", function()
+			{
+				var mm = new MenuManager();
+
+				mm.keybinds =
+				{
+					getKey : function(actionName)
+					{
+						return 0;
+					}
+				};
+
+				var vk = mm.getKeyForAction("pause", vk_escape);
+
+				expect(vk).toBe(vk_escape);
+			});
 		});
 	});
 }

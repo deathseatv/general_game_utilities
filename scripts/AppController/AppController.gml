@@ -179,26 +179,12 @@ function AppController() constructor
 			return;
 		}
 
-		var playingId = "playing";
-		if(is_struct(gameState))
-		{
-			if(variable_struct_exists(gameState, "states") && is_struct(gameState.states))
-			{
-				if(variable_struct_exists(gameState.states, "playing"))
-				{
-					playingId = gameState.states.playing;
-				}
-			}
-		}
-
 		var isPlaying = false;
-		if(is_struct(gameState))
+		if(is_struct(gameState)
+			&& variable_struct_exists(gameState, "isPlaying")
+			&& is_callable(gameState.isPlaying))
 		{
-			if(variable_struct_exists(gameState, "state") && gameState.state == playingId) isPlaying = true;
-			else if(variable_struct_exists(gameState, "currentState") && gameState.currentState == playingId) isPlaying = true;
-			else if(variable_struct_exists(gameState, "currentStateId") && gameState.currentStateId == playingId) isPlaying = true;
-			else if(variable_struct_exists(gameState, "stateId") && gameState.stateId == playingId) isPlaying = true;
-			else if(variable_struct_exists(gameState, "currentStateName") && gameState.currentStateName == playingId) isPlaying = true;
+			isPlaying = gameState.isPlaying();
 		}
 
 		var isMenuOpen = false;

@@ -447,6 +447,59 @@ function gmtlAppControllerTests_safe4()
 
 				gmtlAc4RestoreGlobals(snap);
 			});
+
+			test("update uses gameState.isPlaying() to decide if console can open", function()
+			{
+				var snap = gmtlAc4SnapshotGlobals();
+
+				global.events = new EventBus();
+				global.input = gmtlAc4MakeInputStub();
+				global.menus = gmtlAc4MakeMenusStub();
+				global.audio = gmtlAc4MakeInitOnlyStub();
+				global.scenes = gmtlAc4MakeScenesStub();
+				global.settings = gmtlAc4MakeSettingsStub();
+				global.keybinds = gmtlAc4MakeInitOnlyStub();
+				global.time = gmtlAc4MakeInitOnlyStub();
+				global.camera = gmtlAc4MakeInitOnlyStub();
+
+				global.menus.isOpen = false;
+
+				global.gameState = gmtlAc4MakeGameStateStub();
+
+				global.gameState.calls = 0;
+				global.gameState.calls = 0;
+
+				global.gameState.isPlaying = method(global.gameState, function()
+				{
+					self.calls += 1;
+					return true;
+				});
+				
+				global.debugConsole =
+				{
+					updateCalls : [],
+
+					consumed : false,
+					isOpen : false,
+
+					update : function(canOpen)
+					{
+						var n = array_length(self.updateCalls);
+						self.updateCalls[n] = canOpen;
+					}
+				};
+
+				var app = new AppController();
+				app.init();
+
+				app.update();
+
+				expect(global.gameState.calls).toBe(1);
+				expect(array_length(global.debugConsole.updateCalls)).toBe(1);
+				expect(global.debugConsole.updateCalls[0]).toBeTruthy();
+
+				gmtlAc4RestoreGlobals(snap);
+			});
 		});
 	});
 }

@@ -44,6 +44,84 @@ function gmtlKeybindsTests()
 
 				expect(kb2.getKey("toggleFullscreen")).toBe(vk_f9);
 			});
+
+			test("setKey rejects vkCode <= 0 and does not mutate binds", function()
+			{
+				var kb = new KeybindsManager();
+				var prev = kb.getKey("pause");
+
+				var ok = kb.setKey("pause", 0);
+
+				expect(ok).toBeFalsy();
+				expect(kb.getKey("pause")).toBe(prev);
+			});
+
+			test("fromStruct ignores vkCode <= 0 (keeps defaults)", function()
+			{
+				var kb = new KeybindsManager();
+
+				var data =
+				{
+					pause : 0
+				};
+
+				kb.fromStruct(data);
+
+				expect(kb.getKey("pause")).toBe(kb.defaults.pause);
+			});
+
+			test("save/load roundtrips binds (safe write)", function()
+			{
+				var path = "gmtl_keybinds_test.json";
+
+				if(file_exists(path))
+				{
+					file_delete(path);
+				}
+				if(file_exists(path + ".bak"))
+				{
+					file_delete(path + ".bak");
+				}
+				if(file_exists(path + ".tmp"))
+				{
+					file_delete(path + ".tmp");
+				}
+
+				var kb = new KeybindsManager();
+				kb.fileName = path;
+
+				kb.setKey("recenter", vk_f1);
+
+				var ok = kb.save();
+				expect(ok).toBeTruthy();
+				expect(file_exists(path)).toBeTruthy();
+
+				var kb2 = new KeybindsManager();
+				kb2.fileName = path;
+
+				ok = kb2.load();
+				expect(ok).toBeTruthy();
+				expect(kb2.getKey("recenter")).toBe(vk_f1);
+
+				kb.setKey("recenter", vk_f2);
+				ok = kb.save();
+
+				expect(ok).toBeTruthy();
+				expect(file_exists(path + ".bak")).toBeTruthy();
+
+				if(file_exists(path))
+				{
+					file_delete(path);
+				}
+				if(file_exists(path + ".bak"))
+				{
+					file_delete(path + ".bak");
+				}
+				if(file_exists(path + ".tmp"))
+				{
+					file_delete(path + ".tmp");
+				}
+			});
 		});
 	});
 }

@@ -617,7 +617,11 @@ function MenuManager() constructor
 			var v = kb.getKey(actionName);
 			if(is_real(v))
 			{
-				vk = floor(v);
+				var loaded = floor(v);
+				if(loaded > 0)
+				{
+					vk = loaded;
+				}
 			}
 		}
 

@@ -331,6 +331,59 @@ function SettingsManager() constructor
 		return true;
 	};
 
+	safeWrite = function(path, text)
+	{
+		var tmp = path + ".tmp";
+		var bak = path + ".bak";
+
+		if(file_exists(tmp))
+		{
+			file_delete(tmp);
+		}
+
+		if(!writeTextFile(tmp, text))
+		{
+			return false;
+		}
+
+		var hadExisting = file_exists(path);
+
+		if(hadExisting)
+		{
+			if(file_exists(bak))
+			{
+				file_delete(bak);
+			}
+
+			if(!file_rename(path, bak))
+			{
+				if(file_exists(tmp))
+				{
+					file_delete(tmp);
+				}
+
+				return false;
+			}
+		}
+
+		if(!file_rename(tmp, path))
+		{
+			if(hadExisting && file_exists(bak) && !file_exists(path))
+			{
+				file_rename(bak, path);
+			}
+
+			if(file_exists(tmp))
+			{
+				file_delete(tmp);
+			}
+
+			return false;
+		}
+
+		return true;
+	};
+
 	load = function()
 	{
 		var path = getSavePath();
@@ -369,7 +422,7 @@ function SettingsManager() constructor
 		};
 
 		var raw = json_stringify(data);
-		return writeTextFile(path, raw);
+		return safeWrite(path, raw);
 	};
 
 	onSettingsSet = function(payload, eventName, sender)

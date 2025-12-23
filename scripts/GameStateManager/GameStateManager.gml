@@ -67,6 +67,16 @@ function GameStateManager() constructor
 		return true;
 	};
 
+	isPlaying = function()
+	{
+		return state == states.playing;
+	};
+
+	isPaused = function()
+	{
+		return state == states.paused;
+	};
+
 	pushState = function(next)
 	{
 		if(!is_string(next) || !isValidState(next))
