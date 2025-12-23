@@ -158,7 +158,25 @@ function gmtlAc4MakeInputStub()
 			};
 		},
 
+		clearConsumedCalls : 0,
+		beginFrameCalls : 0,
+		dispatchCalls : 0,
 		updateCalls : 0,
+
+		clearConsumed : function()
+		{
+			self.clearConsumedCalls += 1;
+		},
+
+		beginFrame : function()
+		{
+			self.beginFrameCalls += 1;
+		},
+
+		dispatchEvents : function()
+		{
+			self.dispatchCalls += 1;
+		},
 
 		update : function()
 		{
@@ -360,7 +378,7 @@ function gmtlAppControllerTests_safe4()
 				gmtlAc4RestoreGlobals(snap);
 			});
 
-			test("update calls input.update then menus.update then scenes.update", function()
+			test("update calls input.beginFrame/dispatchEvents around menus.update then scenes.update", function()
 			{
 				var snap = gmtlAc4SnapshotGlobals();
 
@@ -379,13 +397,19 @@ function gmtlAppControllerTests_safe4()
 				var app = new AppController();
 				app.init();
 
+				global.input.clearConsumedCalls = 0;
+				global.input.beginFrameCalls = 0;
+				global.input.dispatchCalls = 0;
 				global.input.updateCalls = 0;
 				global.menus.updateCalls = 0;
 				global.scenes.updateCalls = 0;
 
 				app.update();
 
-				expect(global.input.updateCalls).toBe(1);
+				expect(global.input.clearConsumedCalls).toBe(1);
+				expect(global.input.beginFrameCalls).toBe(1);
+				expect(global.input.dispatchCalls).toBe(1);
+				expect(global.input.updateCalls).toBe(0);
 				expect(global.menus.updateCalls).toBe(1);
 				expect(global.scenes.updateCalls).toBe(1);
 
@@ -497,6 +521,99 @@ function gmtlAppControllerTests_safe4()
 				expect(global.gameState.calls).toBe(1);
 				expect(array_length(global.debugConsole.updateCalls)).toBe(1);
 				expect(global.debugConsole.updateCalls[0]).toBeTruthy();
+
+				gmtlAc4RestoreGlobals(snap);
+			});
+
+			test("Esc in pause menu emits unpause and does not emit pause in same frame", function()
+			{
+				var snap = gmtlAc4SnapshotGlobals();
+
+				var bus = new EventBus();
+
+				var keybinds =
+				{
+					getKey : function(actionName)
+					{
+						if(string(actionName) == "pause")
+						{
+							return vk_escape;
+						}
+
+						return 0;
+					}
+				};
+
+				var input = new InputManager();
+				input.setEventBus(bus);
+				initInputInSystems(input, bus, keybinds);
+
+				var menus = new MenuManager();
+				menus.init(bus);
+				if(variable_struct_exists(menus, "setKeybinds") && is_callable(menus.setKeybinds))
+				{
+					menus.setKeybinds(keybinds);
+				}
+				else
+				{
+					menus.keybinds = keybinds;
+				}
+
+				var gameState = new GameStateManager();
+				gameState.init(bus);
+				gameState.setState(gameState.states.playing);
+
+				var debugConsole =
+				{
+					consumed : false,
+					isOpen : false,
+					pauseWhenOpen : true,
+
+					update : function(canOpen) { }
+				};
+
+				var scenes =
+				{
+					updateCalls : 0,
+					update : function() { self.updateCalls += 1; }
+				};
+
+				var app = new AppController();
+				app.booted = true;
+				app.events = bus;
+				app.input = input;
+				app.menus = menus;
+				app.gameState = gameState;
+				app.scenes = scenes;
+				app.debugConsole = debugConsole;
+
+				global.input = input;
+
+				var pauseSpy = { count : 0 };
+				pauseSpy.handle = function(payload, eventName, sender) { self.count += 1; };
+				var unpauseSpy = { count : 0 };
+				unpauseSpy.handle = function(payload, eventName, sender) { self.count += 1; };
+
+				bus.on("game/pause", pauseSpy.handle, pauseSpy);
+				bus.on("game/unpause", unpauseSpy.handle, unpauseSpy);
+
+				simulateKeyPress(vk_escape);
+				app.update();
+				keyboard_clear(vk_escape);
+
+				expect(pauseSpy.count).toBe(1);
+				expect(unpauseSpy.count).toBe(0);
+				expect(gameState.state).toBe(gameState.states.paused);
+				expect(menus.isOpen).toBeTruthy();
+
+				simulateKeyPress(vk_escape);
+				app.update();
+				keyboard_clear(vk_escape);
+
+				expect(pauseSpy.count).toBe(1);
+				expect(unpauseSpy.count).toBe(1);
+				expect(gameState.state).toBe(gameState.states.playing);
+				expect(menus.isOpen).toBeFalsy();
 
 				gmtlAc4RestoreGlobals(snap);
 			});

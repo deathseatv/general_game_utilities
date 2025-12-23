@@ -275,6 +275,42 @@ function gmtlInitInputInSystemsTests_safe3()
 				gmtlIisRestoreGlobals(snap);
 			});
 
+			test("pause mapper reads raw.keyPressed when available", function()
+			{
+				var snap = gmtlIisSnapshotGlobals();
+
+				var input =
+				{
+					addCalls : [],
+
+					addSignal : function(signalName, mapperFn)
+					{
+						var n = array_length(self.addCalls);
+						self.addCalls[n] =
+						{
+							signalName : signalName,
+							mapperFn : mapperFn
+						};
+					}
+				};
+
+				var ok = initInputInSystems(input, 0);
+				expect(ok).toBeTruthy();
+				expect(array_length(input.addCalls)).toBe(3);
+
+				var mapper = input.addCalls[0].mapperFn;
+
+				var rawFrame =
+				{
+					keyPressed : array_create(256, false)
+				};
+				rawFrame.keyPressed[vk_escape] = true;
+
+				expect(mapper(rawFrame)).toBe(1);
+
+				gmtlIisRestoreGlobals(snap);
+			});
+
 			test("uses global.events when events arg invalid", function()
 			{
 				var snap = gmtlIisSnapshotGlobals();

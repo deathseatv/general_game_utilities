@@ -179,6 +179,19 @@ function AppController() constructor
 			return;
 		}
 
+		var splitInput = is_struct(input)
+			&& variable_struct_exists(input, "beginFrame")
+			&& is_callable(input.beginFrame)
+			&& variable_struct_exists(input, "dispatchEvents")
+			&& is_callable(input.dispatchEvents);
+
+		if(splitInput
+			&& variable_struct_exists(input, "clearConsumed")
+			&& is_callable(input.clearConsumed))
+		{
+			input.clearConsumed();
+		}
+
 		var isPlaying = false;
 		if(is_struct(gameState)
 			&& variable_struct_exists(gameState, "isPlaying")
@@ -213,8 +226,22 @@ function AppController() constructor
 			}
 		}
 
-		input.update();
+		if(splitInput)
+		{
+			input.beginFrame();
+		}
+		else
+		{
+			input.update();
+		}
+
 		menus.update();
+
+		if(splitInput)
+		{
+			input.dispatchEvents();
+		}
+
 		scenes.update();
 	};
 

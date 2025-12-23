@@ -10,6 +10,9 @@ function InputManager() constructor
 		mouseReleased : []
 	};
 
+	consumedSignals = {};
+	consumeAllSignals = false;
+
 	signalDefs = {};
 	signals = {};
 	bindings = {};
@@ -59,6 +62,42 @@ function InputManager() constructor
 
 		watchedMouseButtonsSet[$ btnName] = true;
 		array_push(watchedMouseButtons, button);
+	};
+
+	clearConsumed = function()
+	{
+		consumedSignals = {};
+		consumeAllSignals = false;
+	};
+
+	consume = function(signalName)
+	{
+		if(is_undefined(signalName) || signalName == "")
+		{
+			return;
+		}
+
+		consumedSignals[$ signalName] = true;
+	};
+
+	isConsumed = function(signalName)
+	{
+		if(consumeAllSignals)
+		{
+			return true;
+		}
+
+		if(is_undefined(signalName) || signalName == "")
+		{
+			return false;
+		}
+
+		return variable_struct_exists(consumedSignals, signalName);
+	};
+
+	consumeAll = function()
+	{
+		consumeAllSignals = true;
 	};
 
 	keyDown = function(key)
@@ -263,6 +302,11 @@ function InputManager() constructor
 			return;
 		}
 
+		if(consumeAllSignals)
+		{
+			return;
+		}
+
 		if(signalNamesDirty)
 		{
 			rebuildSignalNames();
@@ -272,7 +316,17 @@ function InputManager() constructor
 
 		for(var i = 0; i < count; i += 1)
 		{
+			if(consumeAllSignals)
+			{
+				return;
+			}
+
 			var signalName = signalNames[i];
+
+			if(self.isConsumed(signalName))
+			{
+				continue;
+			}
 
 			if(!variable_struct_exists(bindings, signalName))
 			{
@@ -282,21 +336,27 @@ function InputManager() constructor
 			var state = signals[$ signalName];
 			var bind = bindings[$ signalName];
 
-			if(state.pressed && !is_undefined(bind.pressed) && bind.pressed != "")
+			if(state.pressed && !is_undefined(bind.pressed) && bind.pressed != "" && !self.isConsumed(signalName))
 			{
 				eventBus.emit(bind.pressed, { signal : signalName, value : state.value }, noone);
 			}
 
-			if(state.released && !is_undefined(bind.released) && bind.released != "")
+			if(state.released && !is_undefined(bind.released) && bind.released != "" && !self.isConsumed(signalName))
 			{
 				eventBus.emit(bind.released, { signal : signalName, value : state.value }, noone);
 			}
 
-			if(state.value != state.prevValue && !is_undefined(bind.changed) && bind.changed != "")
+			if(state.value != state.prevValue && !is_undefined(bind.changed) && bind.changed != "" && !self.isConsumed(signalName))
 			{
 				eventBus.emit(bind.changed, { signal : signalName, value : state.value, prevValue : state.prevValue }, noone);
 			}
 		}
+	};
+
+	beginFrame = function()
+	{
+		captureRaw();
+		updateSignals();
 	};
 
 	captureRaw = function()
@@ -326,8 +386,8 @@ function InputManager() constructor
 
 	update = function()
 	{
-		captureRaw();
-		updateSignals();
+		clearConsumed();
+		beginFrame();
 		dispatchEvents();
 	};
 }

@@ -256,6 +256,40 @@ function gmtlMenuManagerTests()
 
 				expect(vk).toBe(vk_escape);
 			});
+
+			test("pause menu consumes pause signal when handled via key", function()
+			{
+				var hadInput = variable_global_exists("input");
+				var prevInput = hadInput ? global.input : undefined;
+
+				global.input =
+				{
+					consumeCalls : [],
+
+					consume : function(signalName)
+					{
+						array_push(self.consumeCalls, signalName);
+					}
+				};
+
+				var mm = new MenuManager();
+				mm.show("pause");
+
+				simulateKeyPress(vk_escape);
+				mm.update();
+
+				expect(array_length(global.input.consumeCalls)).toBe(1);
+				expect(global.input.consumeCalls[0]).toBe("pause");
+
+				if(hadInput)
+				{
+					global.input = prevInput;
+				}
+				else
+				{
+					variable_global_remove("input");
+				}
+			});
 		});
 	});
 }

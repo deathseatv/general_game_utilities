@@ -545,6 +545,21 @@ function MenuManager() constructor
 		}
 	};
 
+	consumePauseSignal = function()
+	{
+		if(!variable_global_exists("input") || !is_struct(global.input))
+		{
+			return;
+		}
+
+		var inputRef = global.input;
+
+		if(variable_struct_exists(inputRef, "consume") && is_callable(inputRef.consume))
+		{
+			inputRef.consume("pause");
+		}
+	};
+
 	resolveSoundId = function(soundName)
 	{
 		if(is_undefined(soundName) || soundName == "")
@@ -976,6 +991,19 @@ function MenuManager() constructor
 		{
 			inputLockFrames -= 1;
 			self.updateHover();
+
+			if(currentMenuId == "pause")
+			{
+				var pauseKey = self.getKeyForAction("pause", vk_escape);
+	
+				if(keyboard_check_pressed(pauseKey))
+				{
+					self.consumePauseSignal();
+					self.back();
+					return;
+				}
+			}
+	
 			return;
 		}
 
@@ -1037,6 +1065,18 @@ function MenuManager() constructor
 		if(keyboard_check_pressed(vk_enter) || keyboard_check_pressed(vk_space))
 		{
 			self.activateSelection();
+		}
+
+		if(currentMenuId == "pause")
+		{
+			var pauseKey = self.getKeyForAction("pause", vk_escape);
+
+			if(keyboard_check_pressed(pauseKey))
+			{
+				self.consumePauseSignal();
+				self.back();
+				return;
+			}
 		}
 
 		if(keyboard_check_pressed(vk_escape))

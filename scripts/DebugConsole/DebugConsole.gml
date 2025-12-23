@@ -109,10 +109,28 @@ function DebugConsole() constructor
 	{
 		consumed = false;
 
+		if(isOpen && variable_global_exists("input") && is_struct(global.input))
+		{
+			var inputRef = global.input;
+			if(variable_struct_exists(inputRef, "consumeAll") && is_callable(inputRef.consumeAll))
+			{
+				inputRef.consumeAll();
+			}
+		}
+
 		if(keyboard_check_pressed(openKey))
 		{
 			toggle(canOpen);
 			consumed = true;
+
+			if(variable_global_exists("input") && is_struct(global.input))
+			{
+				var inputRef = global.input;
+				if(variable_struct_exists(inputRef, "consumeAll") && is_callable(inputRef.consumeAll))
+				{
+					inputRef.consumeAll();
+				}
+			}
 			return;
 		}
 
@@ -125,6 +143,15 @@ function DebugConsole() constructor
 		{
 			close();
 			consumed = true;
+
+			if(variable_global_exists("input") && is_struct(global.input))
+			{
+				var inputRef = global.input;
+				if(variable_struct_exists(inputRef, "consumeAll") && is_callable(inputRef.consumeAll))
+				{
+					inputRef.consumeAll();
+				}
+			}
 			return;
 		}
 
@@ -132,6 +159,15 @@ function DebugConsole() constructor
 		{
 			close();
 			consumed = true;
+
+			if(variable_global_exists("input") && is_struct(global.input))
+			{
+				var inputRef = global.input;
+				if(variable_struct_exists(inputRef, "consumeAll") && is_callable(inputRef.consumeAll))
+				{
+					inputRef.consumeAll();
+				}
+			}
 			return;
 		}
 
@@ -142,6 +178,15 @@ function DebugConsole() constructor
 			execLine(line);
 
 			consumed = true;
+
+			if(variable_global_exists("input") && is_struct(global.input))
+			{
+				var inputRef = global.input;
+				if(variable_struct_exists(inputRef, "consumeAll") && is_callable(inputRef.consumeAll))
+				{
+					inputRef.consumeAll();
+				}
+			}
 			return;
 		}
 	};

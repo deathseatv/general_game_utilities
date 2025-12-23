@@ -24,6 +24,11 @@ function gmtlInputManagerMakeCallOrderRecorder()
 	{
 		order : [],
 
+		clearConsumed : function()
+		{
+			array_push(self.order, "clearConsumed");
+		},
+
 		captureRaw : function()
 		{
 			array_push(self.order, "captureRaw");
@@ -39,6 +44,8 @@ function gmtlInputManagerMakeCallOrderRecorder()
 			array_push(self.order, "dispatchEvents");
 		}
 	};
+
+	rec.clearConsumedBound = method(rec, rec.clearConsumed);
 
 	rec.captureRawBound = method(rec, rec.captureRaw);
 	rec.updateSignalsBound = method(rec, rec.updateSignals);
@@ -178,6 +185,9 @@ function gmtlInputManagerTests()
 				expect(is_struct(im.signalDefs)).toBeTruthy();
 				expect(is_struct(im.signals)).toBeTruthy();
 				expect(is_struct(im.bindings)).toBeTruthy();
+
+			expect(is_struct(im.consumedSignals)).toBeTruthy();
+			expect(im.consumeAllSignals).toBeFalsy();
 
 				expect(is_array(im.watchedKeys)).toBeTruthy();
 				expect(is_struct(im.watchedKeysSet)).toBeTruthy();
@@ -382,6 +392,54 @@ function gmtlInputManagerTests()
 				expect(bus.calls[0].payload.value).toBe(1);
 			});
 
+			test("dispatchEvents skips consumed signals", function()
+			{
+				var im = new InputManager();
+				var bus = gmtlInputManagerMakeFakeEventBus();
+
+				im.setEventBus(bus);
+
+				im.addSignal("pause", im.keyPressed(vk_escape));
+				im.bindSignal("pause", "game/pause", undefined, undefined);
+
+				var frames =
+				[
+					{ keyDown : [], keyPressed : [vk_escape], keyReleased : [], mouseDown : [], mousePressed : [], mouseReleased : [] }
+				];
+
+				im.captureRaw = gmtlInputManagerMakeCaptureRawStub(im, frames);
+				im.clearConsumed();
+				im.beginFrame();
+				im.consume("pause");
+				im.dispatchEvents();
+
+				expect(array_length(bus.calls)).toBe(0);
+			});
+
+			test("consumeAll prevents any emits", function()
+			{
+				var im = new InputManager();
+				var bus = gmtlInputManagerMakeFakeEventBus();
+
+				im.setEventBus(bus);
+
+				im.addSignal("pause", im.keyPressed(vk_escape));
+				im.bindSignal("pause", "game/pause", undefined, undefined);
+
+				var frames =
+				[
+					{ keyDown : [], keyPressed : [vk_escape], keyReleased : [], mouseDown : [], mousePressed : [], mouseReleased : [] }
+				];
+
+				im.captureRaw = gmtlInputManagerMakeCaptureRawStub(im, frames);
+				im.clearConsumed();
+				im.beginFrame();
+				im.consumeAll();
+				im.dispatchEvents();
+
+				expect(array_length(bus.calls)).toBe(0);
+			});
+
 			test("dispatchEvents emits changed event with prevValue/value", function()
 			{
 				var im = new InputManager();
@@ -449,16 +507,18 @@ function gmtlInputManagerTests()
 				var im = new InputManager();
 				var rec = gmtlInputManagerMakeCallOrderRecorder();
 
+				im.clearConsumed = rec.clearConsumedBound;
 				im.captureRaw = rec.captureRawBound;
 				im.updateSignals = rec.updateSignalsBound;
 				im.dispatchEvents = rec.dispatchEventsBound;
 
 				im.update();
 
-				expect(array_length(rec.order)).toBe(3);
-				expect(rec.order[0]).toBe("captureRaw");
-				expect(rec.order[1]).toBe("updateSignals");
-				expect(rec.order[2]).toBe("dispatchEvents");
+				expect(array_length(rec.order)).toBe(4);
+				expect(rec.order[0]).toBe("clearConsumed");
+				expect(rec.order[1]).toBe("captureRaw");
+				expect(rec.order[2]).toBe("updateSignals");
+				expect(rec.order[3]).toBe("dispatchEvents");
 			});
 
 			test("updateSignals is safe when no signals exist", function()

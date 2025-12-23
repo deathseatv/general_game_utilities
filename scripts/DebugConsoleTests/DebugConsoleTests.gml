@@ -77,6 +77,62 @@ function gmtlDebugConsoleTests()
 				expect(c.isOpen).toBe(false);
 			});
 
+			test("toggle consumes all signals for this frame", function()
+			{
+				var hadInput = variable_global_exists("input");
+				var prevInput = hadInput ? global.input : undefined;
+
+				var bus = new EventBus();
+
+				var spy = { count : 0 };
+				spy.handle = function(payload, eventName, sender) { self.count += 1; };
+				bus.on("game/pause", spy.handle, spy);
+
+				var keybinds =
+				{
+					getKey : function(actionName)
+					{
+						if(string(actionName) == "pause")
+						{
+							return vk_escape;
+						}
+
+						return 0;
+					}
+				};
+
+				var input = new InputManager();
+				input.setEventBus(bus);
+				initInputInSystems(input, bus, keybinds);
+				global.input = input;
+
+				var dc = new DebugConsole();
+				dc.pauseWhenOpen = false;
+
+				simulateKeyPress(dc.openKey);
+				simulateKeyPress(vk_escape);
+
+				input.clearConsumed();
+				input.beginFrame();
+				dc.update(true);
+				input.dispatchEvents();
+
+				keyboard_clear(dc.openKey);
+				keyboard_clear(vk_escape);
+
+				expect(dc.isOpen).toBeTruthy();
+				expect(spy.count).toBe(0);
+
+				if(hadInput)
+				{
+					global.input = prevInput;
+				}
+				else
+				{
+					variable_global_remove("input");
+				}
+			});
+
 			test("log appends lines and trims to maxLines", function()
 			{
 				var c = new DebugConsole();

@@ -40,7 +40,11 @@ function initInputInSystems(input, events, keybinds)
 		}
 	}
 
-	if(argument_count < 3 || !is_struct(keybinds))
+	if(argument_count < 3)
+	{
+		keybinds = undefined;
+	}
+	else if(!is_struct(keybinds))
 	{
 		if(variable_global_exists("keybinds") && is_struct(global.keybinds))
 		{
@@ -58,32 +62,88 @@ function initInputInSystems(input, events, keybinds)
 		{
 			actionName : actionName,
 			fallbackKey : fallbackKey,
+			lastKey : -1,
 			keybinds : keybinds,
+			input : input,
+			watchFn : undefined
+		};
+		if(is_struct(input)
+			&& variable_struct_exists(input, "watchKey")
+			&& !is_undefined(input.watchKey))
+		{
+			token.watchFn = method(input, input.watchKey);
+		}
 
-			run : function(raw)
+
+		var mapper = function(raw)
+		{
+			var vkKey = self.fallbackKey;
+
+			if(is_struct(self.keybinds)
+				&& variable_struct_exists(self.keybinds, "getKey")
+				&& is_callable(self.keybinds.getKey))
 			{
-				var vk = self.fallbackKey;
-
-				if(is_struct(self.keybinds)
-					&& variable_struct_exists(self.keybinds, "getKey")
-					&& is_callable(self.keybinds.getKey))
+				var v = self.keybinds.getKey(self.actionName);
+				if(is_real(v))
 				{
-					var v = self.keybinds.getKey(self.actionName);
-					if(is_real(v))
+					var loaded = floor(v);
+					if(loaded > 0)
 					{
-						var loaded = floor(v);
-						if(loaded > 0)
-						{
-							vk = loaded;
-						}
+						vkKey = loaded;
 					}
 				}
-
-				return keyboard_check_pressed(vk) ? 1 : 0;
 			}
+
+			if(!is_undefined(self.watchFn)
+				&& vkKey != self.lastKey)
+			{
+				self.watchFn(vkKey);
+				self.lastKey = vkKey;
+			}
+
+			if(is_struct(raw)
+				&& variable_struct_exists(raw, "keyPressed")
+				&& is_array(raw.keyPressed)
+				&& is_real(vkKey))
+			{
+				var arr = raw.keyPressed;
+				var len = array_length(arr);
+				var idx = floor(vkKey);
+
+				if(idx >= 0 && idx < len)
+				{
+					var pressed = arr[idx];
+					if(!is_undefined(pressed))
+					{
+						return pressed ? 1 : 0;
+					}
+				}
+			}
+
+			return keyboard_check_pressed(vkKey) ? 1 : 0;
 		};
 
-		return method(token, token.run);
+		if(!is_undefined(token.watchFn))
+		{
+			token.watchFn(fallbackKey);
+
+			if(is_struct(keybinds)
+				&& variable_struct_exists(keybinds, "getKey")
+				&& is_callable(keybinds.getKey))
+			{
+				var initVal = keybinds.getKey(actionName);
+				if(is_real(initVal))
+				{
+					var initKey = floor(initVal);
+					if(initKey > 0 && initKey != fallbackKey)
+					{
+						token.watchFn(initKey);
+					}
+				}
+			}
+		}
+
+		return method(token, mapper);
 	};
 
 	input.addSignal("pause", makePressedMapper("pause", vk_escape));
