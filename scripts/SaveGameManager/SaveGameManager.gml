@@ -59,9 +59,9 @@ function SaveGameManager() constructor
 		return makeFileName(slot) + tempExt;
 	};
 
-	registerProvider = function(id, provider)
+	registerProvider = function(_id, provider)
 	{
-		if(is_undefined(id) || id == "")
+		if(is_undefined(_id) || _id == "")
 		{
 			return false;
 		}
@@ -76,20 +76,20 @@ function SaveGameManager() constructor
 			return false;
 		}
 
-		providers[$ string(id)] = provider;
+		providers[$ string(_id)] = provider;
 		return true;
 	};
 
-	unregisterProvider = function(id)
+	unregisterProvider = function(_id)
 	{
-		if(is_undefined(id) || id == "")
+		if(is_undefined(_id) || _id == "")
 		{
 			return false;
 		}
 
-		if(variable_struct_exists(providers, id))
+		if(variable_struct_exists(providers, _id))
 		{
-			variable_struct_remove(providers, id);
+			variable_struct_remove(providers, _id);
 			return true;
 		}
 

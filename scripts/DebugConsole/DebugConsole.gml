@@ -146,7 +146,7 @@ function DebugConsole() constructor
 		}
 	};
 
-	drawGui = function(x, y, w, h)
+	drawGui = function(_x, _y, w, h)
 	{
 		if(!isOpen)
 		{
@@ -155,7 +155,7 @@ function DebugConsole() constructor
 
 		draw_set_color(c_black);
 		draw_set_alpha(0.80);
-		draw_rectangle(x, y, x + w, y + h, false);
+		draw_rectangle(_x, _y, _x + w, _y + h, false);
 		draw_set_alpha(1);
 
 		draw_set_color(c_white);
@@ -166,13 +166,13 @@ function DebugConsole() constructor
 		var maxVisible = floor((h - padding * 2 - lineH) / lineH);
 		var start = max(0, array_length(lines) - maxVisible);
 
-		var yy = y + padding;
+		var yy = _y + padding;
 		for(var i = start; i < array_length(lines); i += 1)
 		{
-			draw_text(x + padding, yy, lines[i]);
+			draw_text(_x + padding, yy, lines[i]);
 			yy += lineH;
 		}
 
-		draw_text(x + padding, y + h - padding - lineH, "> " + keyboard_string);
+		draw_text(_x + padding, _y + h - padding - lineH, "> " + keyboard_string);
 	};
 }
