@@ -48,18 +48,21 @@ function Menu(menuId, menuTitle, opts) constructor
 	{
 	};
 
-	self.addAction = function(menuManager, label, actionFn, opts)
+	self.addAction = function(menuManager, label, actionFn)
 	{
+		var opts = (argument_count >= 4) ? argument[3] : undefined;
 		return menuManager.addActionItem(self.menuId, label, actionFn, opts);
 	};
 
-	self.addSubmenu = function(menuManager, label, targetMenuId, opts)
+	self.addSubmenu = function(menuManager, label, targetMenuId)
 	{
+		var opts = (argument_count >= 4) ? argument[3] : undefined;
 		return menuManager.addSubmenuItem(self.menuId, label, targetMenuId, opts);
 	};
 
-	self.addRange = function(menuManager, label, getFn, setFn, opts)
+	self.addRange = function(menuManager, label, getFn, setFn)
 	{
+		var opts = (argument_count >= 5) ? argument[4] : undefined;
 		return menuManager.addRangeItem(self.menuId, label, getFn, setFn, opts);
 	};
 
@@ -68,8 +71,9 @@ function Menu(menuId, menuTitle, opts) constructor
 		return menuManager.addLabelItem(self.menuId, label);
 	};
 
-	self.addKeybind = function(menuManager, label, actionName, opts)
+	self.addKeybind = function(menuManager, label, actionName)
 	{
+		var opts = (argument_count >= 4) ? argument[3] : undefined;
 		return menuManager.addKeybindItem(self.menuId, label, actionName, opts);
 	};
 }

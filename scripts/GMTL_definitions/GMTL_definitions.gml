@@ -63,8 +63,8 @@
 #macro	original_mouse_check_button_pressed		mouse_check_button_pressed
 #macro	original_mouse_check_button_released	mouse_check_button_released
 #macro	original_io_clear						io_clear
-#macro	mouse_x									__gmtl_internal_fn_mouse_get_x()
-#macro	mouse_y									__gmtl_internal_fn_mouse_get_y()
+	// NOTE: Newer GameMaker versions forbid macros named like built-in variables.
+	// Use __gmtl_internal_fn_mouse_get_x/y() directly if you need mocked mouse coords.
 
 #macro	mouse_check_button						__gmtl_internal_fn_mouse_check_button
 #macro	mouse_check_button_pressed				__gmtl_internal_fn_mouse_check_button_pressed

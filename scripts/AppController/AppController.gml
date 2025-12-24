@@ -103,7 +103,7 @@ function AppController() constructor
 
 		if(is_struct(events))
 		{
-			events.on("video/toggleFullscreen", method(self, self.onToggleFullscreen));
+			events.on("video/toggleFullscreen", method(self, self.onToggleFullscreen), self);
 		}
 
 		settings.apply();

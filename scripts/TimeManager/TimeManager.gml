@@ -4,11 +4,20 @@ function TimeManager() constructor
 
 	isPaused = false;
 	timeScale = 1.0;
+	baseFps = game_get_speed(gamespeed_fps);
 
 	clamp01 = function(v)
 	{
-		if(v < 0) { return 0; }
-		if(v > 1) { return 1; }
+		if(v < 0)
+		{
+			return 0;
+		}
+
+		if(v > 1)
+		{
+			return 1;
+		}
+
 		return v;
 	};
 
@@ -50,7 +59,7 @@ function TimeManager() constructor
 	apply = function()
 	{
 		var effective = isPaused ? 0.0 : timeScale;
-		game_set_speed(room_speed * effective, gamespeed_fps);
+		game_set_speed(baseFps * effective, gamespeed_fps);
 	};
 
 	setPaused = function(paused)

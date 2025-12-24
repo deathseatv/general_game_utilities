@@ -49,7 +49,7 @@ function AudioManager() constructor
 		applyBusGains(0);
 	};
 
-	setBusVolume = function(busName, v, fadeMs)
+	setBusVolume = function(busName, v)
 	{
 		if(is_undefined(busName) || busName == "")
 		{
@@ -62,6 +62,7 @@ function AudioManager() constructor
 		}
 
 		var fade = 0;
+		var fadeMs = (argument_count >= 3) ? argument[2] : undefined;
 		if(argument_count >= 3 && is_real(fadeMs))
 		{
 			fade = max(0, fadeMs);

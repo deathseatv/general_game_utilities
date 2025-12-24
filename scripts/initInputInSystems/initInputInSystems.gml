@@ -1,5 +1,9 @@
-function initInputInSystems(input, events, keybinds)
+function initInputInSystems()
 {
+	var input = (argument_count >= 1) ? argument[0] : undefined;
+	var events = (argument_count >= 2) ? argument[1] : undefined;
+	var keybinds = (argument_count >= 3) ? argument[2] : undefined;
+
 	if(argument_count < 1 || !is_struct(input))
 	{
 		if(variable_global_exists("input") && is_struct(global.input))
