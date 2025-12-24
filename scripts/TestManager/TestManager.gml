@@ -11,7 +11,7 @@ function TestManager()
 	gmtlSettingsTests();
 	gmtlTimeTests();
 	gmtlSaveGameTests();
-
+	
 
 	// integration
 	gmtlAppControllerTests_safe4();
@@ -20,4 +20,6 @@ function TestManager()
 	// debug console
 	gmtlDebugConsoleTests();
 	gmtlDebugLogTests();
+	
+	gmtlGuiManagerTests();
 }

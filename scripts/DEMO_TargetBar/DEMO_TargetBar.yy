@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"DEMO_TargetBar",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"DEMO_TargetBar",
+  "parent":{
+    "name":"GUI",
+    "path":"folders/Scripts/Managers/GUI.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

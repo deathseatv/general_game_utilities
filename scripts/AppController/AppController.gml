@@ -12,6 +12,8 @@ function AppController() constructor
 	time = undefined;
 	camera = undefined;
 
+	gui = undefined;
+
 	debugConsole = undefined;
 
 	booted = false;
@@ -51,6 +53,8 @@ function AppController() constructor
 		time = (variable_global_exists("time") && is_struct(global.time)) ? global.time : new TimeManager();
 		camera = (variable_global_exists("camera") && is_struct(global.camera)) ? global.camera : new CameraManager();
 
+		gui = (variable_global_exists("gui") && is_struct(global.gui)) ? global.gui : new GuiManager();
+
 		debugConsole = (variable_global_exists("debugConsole") && is_struct(global.debugConsole)) ? global.debugConsole : new DebugConsole();
 
 		global.input = input;
@@ -62,10 +66,12 @@ function AppController() constructor
 		global.keybinds = keybinds;
 		global.time = time;
 		global.camera = camera;
+		global.gui = gui;
 		global.debugConsole = debugConsole;
 
 		audio.init(events);
 		settings.init(events);
+
 		if(variable_struct_exists(settings, "load") && is_callable(settings.load))
 		{
 			settings.load();
@@ -75,15 +81,23 @@ function AppController() constructor
 		{
 			keybinds.load();
 		}
+
 		time.init(events);
 		scenes.init(events);
 		gameState.init(events);
 		menus.init(events);
+
 		if(variable_struct_exists(menus, "setKeybinds") && is_callable(menus.setKeybinds))
 		{
 			menus.setKeybinds(keybinds);
 		}
+
 		camera.init(events);
+
+		if(is_struct(gui) && variable_struct_exists(gui, "init") && is_callable(gui.init))
+		{
+			gui.init(events);
+		}
 
 		initInputInSystems(input, events, keybinds);
 
@@ -158,7 +172,6 @@ function AppController() constructor
 
 		debugConsole.log("Console ready. Type 'help'.");
 	};
-
 
 	onToggleFullscreen = function(payload, eventName, sender)
 	{
@@ -237,6 +250,11 @@ function AppController() constructor
 
 		menus.update();
 
+		if(is_struct(gui) && variable_struct_exists(gui, "update") && is_callable(gui.update))
+		{
+			gui.update();
+		}
+
 		if(splitInput)
 		{
 			input.dispatchEvents();
@@ -253,6 +271,12 @@ function AppController() constructor
 		}
 
 		scenes.drawGui();
+
+		if(is_struct(gui) && variable_struct_exists(gui, "drawGui") && is_callable(gui.drawGui))
+		{
+			gui.drawGui();
+		}
+
 		menus.drawGui();
 
 		if(is_struct(debugConsole) && variable_struct_exists(debugConsole, "drawGui"))
