@@ -257,6 +257,21 @@ function MenuManager() constructor
 		return menus[$ currentMenuId];
 	};
 
+	registerMenuDef = function(menuDef)
+	{
+		if(!is_struct(menuDef))
+		{
+			return false;
+		}
+
+		if(!variable_struct_exists(menuDef, "register") || !is_callable(menuDef.register))
+		{
+			return false;
+		}
+
+		return menuDef.register(self);
+	};
+
 	addMenu = function()
 	{
 		var menuId = (argument_count > 0) ? argument[0] : "";
@@ -426,7 +441,6 @@ function MenuManager() constructor
 		return true;
 	};
 
-
 	addLabelItem = function()
 	{
 		var menuId = (argument_count > 0) ? argument[0] : "";
@@ -491,7 +505,6 @@ function MenuManager() constructor
 		return true;
 	};
 
-
 	clamp01 = function(v)
 	{
 		if(v < 0) { return 0; }
@@ -531,7 +544,6 @@ function MenuManager() constructor
 		}
 	};
 
-
 	setUiSounds = function(hoverName, selectName)
 	{
 		if(!is_undefined(hoverName))
@@ -567,13 +579,13 @@ function MenuManager() constructor
 			return noone;
 		}
 
-			var assetId = asset_get_index(soundName);
-			if(assetId < 0)
-			{
-				return noone;
-			}
+		var assetId = asset_get_index(soundName);
+		if(assetId < 0)
+		{
+			return noone;
+		}
 
-			return assetId;
+		return assetId;
 	};
 
 	emitUiSound = function(soundName)
@@ -748,7 +760,6 @@ function MenuManager() constructor
 		endKeyCapture();
 	};
 
-
 	getItemCount = function(menu)
 	{
 		if(is_undefined(menu))
@@ -758,7 +769,6 @@ function MenuManager() constructor
 
 		return array_length(menu.items);
 	};
-
 
 	selectFirstInteractive = function()
 	{
@@ -783,7 +793,6 @@ function MenuManager() constructor
 
 		selectedIndex = 0;
 	};
-
 
 	moveSelection = function(dir)
 	{
@@ -986,7 +995,7 @@ function MenuManager() constructor
 		{
 			return;
 		}
-		
+
 		if(inputLockFrames > 0)
 		{
 			inputLockFrames -= 1;
@@ -995,7 +1004,7 @@ function MenuManager() constructor
 			if(currentMenuId == "pause")
 			{
 				var pauseKey = self.getKeyForAction("pause", vk_escape);
-	
+
 				if(keyboard_check_pressed(pauseKey))
 				{
 					self.consumePauseSignal();
@@ -1003,7 +1012,7 @@ function MenuManager() constructor
 					return;
 				}
 			}
-	
+
 			return;
 		}
 
@@ -1044,7 +1053,6 @@ function MenuManager() constructor
 		{
 			self.adjustSelection(1);
 		}
-
 
 		var count = array_length(menu.items);
 
@@ -1119,7 +1127,6 @@ function MenuManager() constructor
 		gpu_set_blendmode(bm_normal);
 		draw_set_font(-1);
 
-		// background
 		if(menu.background)
 		{
 			var a = 1;
@@ -1135,14 +1142,12 @@ function MenuManager() constructor
 			draw_set_alpha(1);
 		}
 
-		// title
 		draw_set_halign(fa_center);
 		draw_set_valign(fa_top);
 
 		draw_set_color(titleColor);
 		draw_text(guiW * 0.5, titleY, menu.title);
 
-		// special menus
 		if(menu.id == "intro")
 		{
 			draw_set_color(itemColor);
@@ -1162,7 +1167,6 @@ function MenuManager() constructor
 			return;
 		}
 
-		// items
 		var count = array_length(menu.items);
 		currentItemRects = [];
 
@@ -1225,50 +1229,20 @@ function MenuManager() constructor
 
 	buildDefaultMenus = function()
 	{
-		self.addMenu("intro", "TITLE", { background : true, backAction : "close" });
-		self.addMenu("main", "MAIN MENU", { background : true, backAction : "close" });
-		self.addMenu("options", "OPTIONS", { background : true, backAction : "pop" });
-		self.addMenu("volume", "VOLUME", { background : true, backAction : "pop" });
-		self.addMenu("keybinds", "KEYBINDS", { background : true, backAction : "pop" });
-		self.addMenu("pause", "PAUSED", { background : false, backAction : "unpause" });
-		self.addMenu("loading", "LOADING", { background : true, backAction : "close" });
-		self.addMenu("confirmExit", "EXIT GAME?", { background : true, backAction : "main" });
-
-
-		self.addActionItem("main", "Play", method(self, self.actionPlay));
-		self.addSubmenuItem("main", "Options", "options");
-		self.addActionItem("main", "Exit Game", method(self, self.actionExitPrompt));
-
-
-		self.addSubmenuItem("options", "Volume", "volume");
-		self.addSubmenuItem("options", "Keybinds", "keybinds");
-
-		self.addRangeItem("volume", "Sound", method(self, self.getSoundVolume), method(self, self.setSoundVolume), { step : 0.05 });
-		self.addRangeItem("volume", "Music", method(self, self.getMusicVolume), method(self, self.setMusicVolume), { step : 0.05 });
-
-		self.addKeybindItem("keybinds", "Pause", "pause");
-		self.addKeybindItem("keybinds", "Recenter", "recenter");
-		self.addKeybindItem("keybinds", "Toggle Fullscreen", "toggleFullscreen");
-		self.addLabelItem("keybinds", "(Press Enter to rebind)");
-
-		self.addSubmenuItem("pause", "Options", "options");
-		self.addActionItem("pause", "Main Menu", method(self, self.actionMainMenu));
-		self.addActionItem("pause", "Return to Game", method(self, self.actionReturnToGame));
-		
-		self.addActionItem("options", "Back", method(self, self.actionBack));
-		self.addActionItem("volume", "Back", method(self, self.actionBack));
-		self.addActionItem("keybinds", "Back", method(self, self.actionBack));
-
-		self.addActionItem("confirmExit", "Yes", method(self, self.actionExit));
-		self.addActionItem("confirmExit", "No", method(self, self.actionExitCancel));
-
+		self.registerMenuDef(new IntroMenu());
+		self.registerMenuDef(new MainMenu());
+		self.registerMenuDef(new OptionsMenu());
+		self.registerMenuDef(new VolumeMenu());
+		self.registerMenuDef(new KeybindsMenu());
+		self.registerMenuDef(new PauseMenu());
+		self.registerMenuDef(new LoadingMenu());
+		self.registerMenuDef(new ConfirmExitMenu());
 	};
 
 	actionPlay = function()
 	{
 		if(!is_undefined(eventBus))
 		{
-			// TODO: replace "rm_game" with your actual gameplay room asset name
 			eventBus.emit("game/start", { sceneId : "rm_game" }, noone);
 		}
 
@@ -1288,11 +1262,6 @@ function MenuManager() constructor
 	actionExit = function()
 	{
 		game_end();
-	};
-
-	actionKeybindsStub = function()
-	{
-		show_debug_message("[Menu] keybinds stub");
 	};
 
 	actionMainMenu = function()

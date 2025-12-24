@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"KeybindsMenu",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"KeybindsMenu",
+  "parent":{
+    "name":"Menus",
+    "path":"folders/Scripts/Managers/MenuSystem/Menus.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
