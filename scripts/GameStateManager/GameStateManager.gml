@@ -114,7 +114,20 @@ function GameStateManager() constructor
 	{
 		if(state != states.playing)
 		{
-			return;
+			// If we are in a gameplay room but state didn't transition yet,
+			// allow pause when no menu is currently open.
+			if(state == states.menu
+				&& variable_global_exists("menus")
+				&& is_struct(global.menus)
+				&& variable_struct_exists(global.menus, "isOpen")
+				&& !global.menus.isOpen)
+			{
+				setState(states.playing);
+			}
+			else
+			{
+				return;
+			}
 		}
 
 		pushState(states.paused);

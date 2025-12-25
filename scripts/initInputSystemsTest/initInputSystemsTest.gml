@@ -229,7 +229,7 @@ function gmtlInitInputInSystemsTests_safe3()
 
 				expect(array_length(input.bindCalls)).toBe(3);
 				expect(input.bindCalls[0].signalName).toBe("pause");
-				expect(input.bindCalls[0].pressedEventName).toBe("game/pause");
+				expect(input.bindCalls[0].pressedEventName).toBe("flow/togglePause");
 				expect(input.bindCalls[1].signalName).toBe("recenter");
 				expect(input.bindCalls[1].pressedEventName).toBe("camera/recenter");
 

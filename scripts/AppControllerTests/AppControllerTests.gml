@@ -33,6 +33,7 @@ function gmtlAc4SnapshotGlobals()
 		"events",
 		"eventBus",
 		"input",
+		"flow",
 		"menus",
 		"audio",
 		"scenes",
@@ -87,14 +88,88 @@ function gmtlAc4MakeBus()
 {
 	return
 	{
-		emit : function(eventName, payload, sender)
-		{
-			return 1;
-		},
+		listeners : { },
 
 		on : function(eventName, handler, ctx)
 		{
-			return function() { };
+			if(is_undefined(eventName) || eventName == "" || !is_callable(handler))
+			{
+				return function() { };
+			}
+
+			var eventKeyLocal = string(eventName);
+
+			if(!variable_struct_exists(self.listeners, eventKeyLocal))
+			{
+				self.listeners[$ eventKeyLocal] = [];
+			}
+
+			var bound = is_undefined(ctx) ? handler : method(ctx, handler);
+
+			var bucket = self.listeners[$ eventKeyLocal];
+			var idxLocal = array_length(bucket);
+			bucket[idxLocal] = bound;
+			self.listeners[$ eventKeyLocal] = bucket;
+
+				var busRef = self;
+				var eventKeyRef = eventKeyLocal;
+				var idxRef = idxLocal;
+
+			var token =
+			{
+					bus : busRef,
+					eventKey : eventKeyRef,
+					idx : idxRef,
+
+				unsub : function()
+				{
+						if(!is_struct(self.bus) || !variable_struct_exists(self.bus, "listeners") || !variable_struct_exists(self.bus.listeners, self.eventKey))
+					{
+						return false;
+					}
+
+					var bucketRef = self.bus.listeners[$ self.eventKey];
+					if(self.idx >= 0 && self.idx < array_length(bucketRef))
+					{
+						bucketRef[self.idx] = undefined;
+						self.bus.listeners[$ self.eventKey] = bucketRef;
+						return true;
+					}
+
+					return false;
+				}
+			};
+
+			return method(token, token.unsub);
+		},
+
+		emit : function(eventName, payload, sender)
+		{
+			if(is_undefined(eventName) || eventName == "")
+			{
+				return 0;
+			}
+
+			var eventKeyLocal = string(eventName);
+			if(!variable_struct_exists(self.listeners, eventKeyLocal))
+			{
+				return 0;
+			}
+
+			var bucket = self.listeners[$ eventKeyLocal];
+			var fired = 0;
+
+			for(var i = array_length(bucket) - 1; i >= 0; i -= 1)
+			{
+				var fn = bucket[i];
+				if(is_callable(fn))
+				{
+					fn(payload, eventKeyLocal, sender);
+					fired += 1;
+				}
+			}
+
+			return fired;
 		}
 	};
 }
@@ -195,9 +270,33 @@ function gmtlAc4MakeMenusStub()
 
 		showCalls : [],
 
+		onMenuShow : function(payload, eventName, sender)
+		{
+			if(!is_struct(payload))
+			{
+				return;
+			}
+
+			var menuId = "";
+			if(variable_struct_exists(payload, "menuId")) menuId = string(payload.menuId);
+			else if(variable_struct_exists(payload, "id")) menuId = string(payload.id);
+
+			if(menuId == "")
+			{
+				return;
+			}
+
+			self.show(menuId);
+		},
+
 		init : function(bus)
 		{
 			self.initCalls += 1;
+
+			if(is_struct(bus) && variable_struct_exists(bus, "on") && is_callable(bus.on))
+			{
+				bus.on("menu/show", method(self, self.onMenuShow));
+			}
 		},
 
 		show : function(menuId)
@@ -374,6 +473,38 @@ function gmtlAppControllerTests_safe4()
 				expect(is_struct(global.events)).toBeTruthy();
 				expect(is_struct(global.eventBus)).toBeTruthy();
 				expect(global.events).toBe(global.eventBus);
+
+				gmtlAc4RestoreGlobals(snap);
+			});
+
+			test("init replaces invalid global.flow and wires flow listeners", function()
+			{
+				var snap = gmtlAc4SnapshotGlobals();
+
+				gmtlAc4RemoveGlobal("events");
+				gmtlAc4RemoveGlobal("eventBus");
+
+				var bus = gmtlAc4MakeBus();
+				global.events = bus;
+
+				global.flow = { bogus : true };
+
+				global.input = gmtlAc4MakeInputStub();
+				global.menus = gmtlAc4MakeMenusStub();
+				global.audio = gmtlAc4MakeInitOnlyStub();
+				global.scenes = gmtlAc4MakeScenesStub();
+				global.gameState = gmtlAc4MakeGameStateStub();
+				global.settings = gmtlAc4MakeSettingsStub();
+				global.time = gmtlAc4MakeInitOnlyStub();
+				global.camera = gmtlAc4MakeInitOnlyStub();
+
+				var app = new AppController();
+				app.init();
+
+				expect(variable_struct_exists(global.flow, "init")).toBeTruthy();
+				expect(variable_struct_exists(global.flow, "wire")).toBeTruthy();
+				expect(variable_struct_exists(bus.listeners, "flow/togglePause")).toBeTruthy();
+				expect(array_length(bus.listeners[$ "flow/togglePause"])).toBeGreaterThan(0);
 
 				gmtlAc4RestoreGlobals(snap);
 			});
@@ -563,6 +694,26 @@ function gmtlAppControllerTests_safe4()
 				gameState.init(bus);
 				gameState.setState(gameState.states.playing);
 
+				var scenes =
+				{
+					updateCalls : 0,
+					update : function() { self.updateCalls += 1; }
+				};
+
+				var flow = new FlowManager();
+				flow.init(bus,
+				{
+					mode : "events",
+					input : input,
+					menus : menus,
+					scenes : scenes,
+					gameState : gameState,
+					wire : true
+				});
+
+				flow.wire();
+				global.flow = flow;
+
 				var debugConsole =
 				{
 					consumed : false,
@@ -570,12 +721,6 @@ function gmtlAppControllerTests_safe4()
 					pauseWhenOpen : true,
 
 					update : function(canOpen) { }
-				};
-
-				var scenes =
-				{
-					updateCalls : 0,
-					update : function() { self.updateCalls += 1; }
 				};
 
 				var app = new AppController();
@@ -599,7 +744,8 @@ function gmtlAppControllerTests_safe4()
 
 				simulateKeyPress(vk_escape);
 				app.update();
-				keyboard_clear(vk_escape);
+				simulateFrameWait(1);
+				app.update();
 
 				expect(pauseSpy.count).toBe(1);
 				expect(unpauseSpy.count).toBe(0);
@@ -608,7 +754,8 @@ function gmtlAppControllerTests_safe4()
 
 				simulateKeyPress(vk_escape);
 				app.update();
-				keyboard_clear(vk_escape);
+				simulateFrameWait(1);
+				app.update();
 
 				expect(pauseSpy.count).toBe(1);
 				expect(unpauseSpy.count).toBe(1);

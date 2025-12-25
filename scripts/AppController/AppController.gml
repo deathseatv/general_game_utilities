@@ -15,6 +15,7 @@ function AppController() constructor
 	gui = undefined;
 
 	debugConsole = undefined;
+	flow = undefined;
 
 	booted = false;
 
@@ -57,6 +58,13 @@ function AppController() constructor
 
 		debugConsole = (variable_global_exists("debugConsole") && is_struct(global.debugConsole)) ? global.debugConsole : new DebugConsole();
 
+		var canReuseFlow = variable_global_exists("flow")
+			&& is_struct(global.flow)
+			&& variable_struct_exists(global.flow, "init")
+			&& is_callable(global.flow.init);
+
+		flow = canReuseFlow ? global.flow : new FlowManager();
+
 		global.input = input;
 		global.menus = menus;
 		global.audio = audio;
@@ -68,6 +76,7 @@ function AppController() constructor
 		global.camera = camera;
 		global.gui = gui;
 		global.debugConsole = debugConsole;
+		global.flow = flow;
 
 		audio.init(events);
 		settings.init(events);
@@ -103,7 +112,7 @@ function AppController() constructor
 
 		if(is_struct(events))
 		{
-			events.on("video/toggleFullscreen", method(self, self.onToggleFullscreen), self);
+			events.on("video/toggleFullscreen", self.onToggleFullscreen, self);
 		}
 
 		settings.apply();
@@ -111,7 +120,42 @@ function AppController() constructor
 		self.initDebugConsole();
 
 		gameState.setState(gameState.states.menu);
-		menus.show("intro");
+
+		var inputRef = input;
+		var menusRef = menus;
+		var scenesRef = scenes;
+		var gameStateRef = gameState;
+
+		if(is_struct(flow)
+			&& variable_struct_exists(flow, "init")
+			&& is_callable(flow.init))
+		{
+			flow.init(events,
+			{
+				mode : "events",
+				menus : menusRef,
+				scenes : scenesRef,
+				gameState : gameStateRef,
+				input : inputRef,
+				wire : true
+			});
+
+			if(variable_struct_exists(flow, "wire") && is_callable(flow.wire))
+			{
+				flow.wire();
+			}
+		}
+
+		if(is_struct(flow)
+			&& variable_struct_exists(flow, "boot")
+			&& is_callable(flow.boot))
+		{
+			flow.boot();
+		}
+		else
+		{
+			menus.show("intro");
+		}
 	};
 
 	initDebugConsole = function()

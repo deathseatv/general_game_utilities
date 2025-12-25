@@ -338,7 +338,16 @@ function InputManager() constructor
 
 			if(state.pressed && !is_undefined(bind.pressed) && bind.pressed != "" && !self.isConsumed(signalName))
 			{
-				eventBus.emit(bind.pressed, { signal : signalName, value : state.value }, noone);
+				var fired = eventBus.emit(bind.pressed, { signal : signalName, value : state.value }, noone);
+				if(!is_real(fired))
+				{
+					fired = 0;
+				}
+
+				if(fired <= 0 && signalName == "pause" && bind.pressed == "flow/togglePause")
+				{
+					eventBus.emit("game/pause", { signal : signalName, value : state.value }, noone);
+				}
 			}
 
 			if(state.released && !is_undefined(bind.released) && bind.released != "" && !self.isConsumed(signalName))

@@ -1241,12 +1241,21 @@ function MenuManager() constructor
 
 	actionPlay = function()
 	{
+		var fired = 0;
+
 		if(!is_undefined(eventBus))
 		{
-			eventBus.emit("game/start", { sceneId : "rm_game" }, noone);
+			fired = eventBus.emit("flow/startGame", { sceneId : "rm_game" }, noone);
+			if(fired <= 0)
+			{
+				eventBus.emit("game/start", { sceneId : "rm_game" }, noone);
+			}
 		}
 
-		self.show("loading");
+		if(fired <= 0)
+		{
+			self.show("loading");
+		}
 	};
 
 	actionExitPrompt = function()
@@ -1261,27 +1270,55 @@ function MenuManager() constructor
 
 	actionExit = function()
 	{
-		game_end();
+		var fired = 0;
+
+		if(!is_undefined(eventBus))
+		{
+			fired = eventBus.emit("flow/quit", { }, noone);
+		}
+
+		if(fired <= 0)
+		{
+			game_end();
+		}
 	};
 
 	actionMainMenu = function()
 	{
+		var fired = 0;
+
 		if(!is_undefined(eventBus))
 		{
-			eventBus.emit("game/mainMenu", { }, noone);
+			fired = eventBus.emit("flow/mainMenu", { }, noone);
+			if(fired <= 0)
+			{
+				eventBus.emit("game/mainMenu", { }, noone);
+			}
 		}
 
-		self.show("main");
+		if(fired <= 0)
+		{
+			self.show("main");
+		}
 	};
 
 	actionReturnToGame = function()
 	{
+		var fired = 0;
+
 		if(!is_undefined(eventBus))
 		{
-			eventBus.emit("game/unpause", { }, noone);
+			fired = eventBus.emit("flow/unpause", { }, noone);
+			if(fired <= 0)
+			{
+				eventBus.emit("game/unpause", { }, noone);
+			}
 		}
 
-		self.close();
+		if(fired <= 0)
+		{
+			self.close();
+		}
 	};
 
 	self.buildDefaultMenus();

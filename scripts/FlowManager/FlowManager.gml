@@ -410,24 +410,21 @@ function FlowManager() constructor
 
 		if(mode == "events")
 		{
-			if(isStateSafe("paused"))
+			var menuId = currentMenuIdSafe();
+
+			if(menuId == ids.pauseMenu || isStateSafe("paused"))
 			{
 				emit("game/unpause", { });
 				emit("menu/close", { });
 				return true;
 			}
 
-			if(isStateSafe("playing"))
+			if(isMenuOpenSafe() && menuId != "" && menuId != ids.pauseMenu)
 			{
-				if(isMenuOpenSafe() && currentMenuIdSafe() != ids.pauseMenu)
-				{
-					return false;
-				}
-
-				return emit("game/pause", { });
+				return false;
 			}
 
-			return false;
+			return emit("game/pause", { });
 		}
 
 		if(isStateSafe("paused"))

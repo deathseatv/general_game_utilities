@@ -392,6 +392,85 @@ function gmtlInputManagerTests()
 				expect(bus.calls[0].payload.value).toBe(1);
 			});
 
+			test("pause falls back to game/pause when flow/togglePause has no listeners", function()
+			{
+				var im = new InputManager();
+				var bus = new EventBus();
+
+				im.setEventBus(bus);
+				im.addSignal("pause", im.keyPressed(vk_escape));
+				im.bindSignal("pause", "flow/togglePause", undefined, undefined);
+
+				var token =
+				{
+					count : 0,
+					hit : function(payload, eventName, sender)
+					{
+						self.count += 1;
+					}
+				};
+
+				bus.on("game/pause", method(token, token.hit));
+
+				var frames =
+				[
+					{ keyDown : [], keyPressed : [vk_escape], keyReleased : [], mouseDown : [], mousePressed : [], mouseReleased : [] },
+					{ keyDown : [], keyPressed : [], keyReleased : [], mouseDown : [], mousePressed : [], mouseReleased : [] }
+				];
+
+				im.captureRaw = gmtlInputManagerMakeCaptureRawStub(im, frames);
+
+				im.update();
+				im.update();
+
+				expect(token.count).toBe(1);
+			});
+
+				test("pause does not fall back when flow/togglePause is handled", function()
+			{
+				var im = new InputManager();
+				var bus = new EventBus();
+
+				im.setEventBus(bus);
+				im.addSignal("pause", im.keyPressed(vk_escape));
+				im.bindSignal("pause", "flow/togglePause", undefined, undefined);
+
+					var pauseToken =
+					{
+						count : 0,
+						hit : function(payload, eventName, sender)
+						{
+							self.count += 1;
+						}
+					};
+
+					var flowToken =
+					{
+						count : 0,
+						hit : function(payload, eventName, sender)
+						{
+							self.count += 1;
+						}
+					};
+
+				bus.on("game/pause", method(pauseToken, pauseToken.hit));
+				bus.on("flow/togglePause", method(flowToken, flowToken.hit));
+
+				var frames =
+				[
+					{ keyDown : [], keyPressed : [vk_escape], keyReleased : [], mouseDown : [], mousePressed : [], mouseReleased : [] },
+					{ keyDown : [], keyPressed : [], keyReleased : [], mouseDown : [], mousePressed : [], mouseReleased : [] }
+				];
+
+				im.captureRaw = gmtlInputManagerMakeCaptureRawStub(im, frames);
+
+				im.update();
+				im.update();
+
+				expect(flowToken.count).toBe(1);
+				expect(pauseToken.count).toBe(0);
+			});
+
 			test("dispatchEvents skips consumed signals", function()
 			{
 				var im = new InputManager();

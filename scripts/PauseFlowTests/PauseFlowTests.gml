@@ -44,6 +44,7 @@ function gmtlPfSnapshotGlobals()
 	var names =
 	[
 		"input",
+		"flow",
 		"events",
 		"eventBus",
 		"keybinds",
@@ -126,6 +127,21 @@ function gmtlPfMakeHarness()
 	var menus = new MenuManager();
 	menus.init(bus);
 
+	var scenes = { update : function() { }, drawGui : function() { } };
+
+	var flow = new FlowManager();
+	flow.init(bus,
+	{
+		mode : "events",
+		input : input,
+		menus : menus,
+		scenes : scenes,
+		gameState : gameState,
+		wire : true
+	});
+
+	flow.wire();
+
 	// subscribe tracer LAST so it fires FIRST (bus emits LIFO)
 	bus.on("game/pause", tracer.handle, tracer);
 	bus.on("pause/entered", tracer.handle, tracer);
@@ -134,9 +150,8 @@ function gmtlPfMakeHarness()
 	bus.on("pause/exited", tracer.handle, tracer);
 
 	global.input = input;
+	global.flow = flow;
 	global.keybinds = keybinds;
-
-	var scenes = { update : function() { }, drawGui : function() { } };
 	var gui = { update : function() { }, drawGui : function() { } };
 
 	var debugConsole =
@@ -163,6 +178,7 @@ function gmtlPfMakeHarness()
 		bus : bus,
 		tracer : tracer,
 		input : input,
+		flow : flow,
 		menus : menus,
 		gameState : gameState
 	};
@@ -180,6 +196,7 @@ function gmtlPauseFlowTests_safe1()
 				var snap = gmtlPfSnapshotGlobals();
 
 				gmtlPfRemoveGlobal("input");
+				gmtlPfRemoveGlobal("flow");
 				gmtlPfRemoveGlobal("events");
 				gmtlPfRemoveGlobal("eventBus");
 				gmtlPfRemoveGlobal("keybinds");
@@ -206,7 +223,7 @@ function gmtlPauseFlowTests_safe1()
 				expect(ok).toBeTruthy();
 				expect(variable_struct_exists(input.signals, "pause")).toBeTruthy();
 				expect(variable_struct_exists(input.bindings, "pause")).toBeTruthy();
-				expect(input.bindings[$ "pause"].pressed).toBe("game/pause");
+				expect(input.bindings[$ "pause"].pressed).toBe("flow/togglePause");
 
 				gmtlPfRestoreGlobals(snap);
 			});
@@ -230,6 +247,24 @@ function gmtlPauseFlowTests_safe1()
 
 				gmtlPfRestoreGlobals(snap);
 			});
+
+				test("Esc while playing pauses even if FlowManager has no gameState ref", function()
+				{
+					var snap = gmtlPfSnapshotGlobals();
+					var h = gmtlPfMakeHarness();
+
+					h.flow.gameState = undefined;
+
+					simulateKeyPress(vk_escape);
+					h.app.update();
+					keyboard_clear(vk_escape);
+
+					expect(h.gameState.state).toBe(h.gameState.states.paused);
+					expect(h.menus.isOpen).toBeTruthy();
+					expect(h.menus.currentMenuId).toBe("pause");
+
+					gmtlPfRestoreGlobals(snap);
+				});
 
 			test("Esc in pause menu consumes pause signal, emits game/unpause, and closes menu", function()
 			{

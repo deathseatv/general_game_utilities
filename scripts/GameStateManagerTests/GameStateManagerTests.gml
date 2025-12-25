@@ -130,18 +130,26 @@ function gmtlGameStateManagerTests()
 				expect(gs.popState()).toBeFalsy();
 			});
 
-			test("onPauseRequested only pauses from playing", function()
+			test("onPauseRequested pauses from playing (and from menu when no menu is open)", function()
 			{
+				var hadMenus = variable_global_exists("menus");
+				var prevMenus = hadMenus ? global.menus : undefined;
+
 				var gs = new GameStateManager();
 				var bus = gmtlGsMakeEmitBus();
 
 				gs.init(bus);
 
 				gs.setState(gs.states.menu);
+				global.menus = { isOpen : true };
 				gs.onPauseRequested({ }, "game/pause", noone);
 
 				expect(gs.getState()).toBe(gs.states.menu);
 				expect(gmtlGsCountEmits(bus, "menu/show")).toBe(0);
+
+				global.menus.isOpen = false;
+				gs.onPauseRequested({ }, "game/pause", noone);
+				expect(gs.getState()).toBe(gs.states.paused);
 
 				gs.setState(gs.states.playing);
 				gs.onPauseRequested({ }, "game/pause", noone);
@@ -151,6 +159,15 @@ function gmtlGameStateManagerTests()
 				var e = gmtlGsLastEmit(bus, "menu/show");
 				expect(is_undefined(e)).toBeFalsy();
 				expect(e.payload.menuId).toBe("pause");
+
+				if(hadMenus)
+				{
+					global.menus = prevMenus;
+				}
+				else
+				{
+					variable_struct_remove(global, "menus");
+				}
 			});
 
 			test("onUnpauseRequested pops if paused, otherwise sets playing when not playing", function()

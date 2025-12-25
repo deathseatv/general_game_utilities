@@ -93,6 +93,21 @@ function gmtlIntegrationTests()
 				menus.init(bus);
 				menus.close();
 
+				var scenes = { };
+
+				var flow = new FlowManager();
+				flow.init(bus,
+				{
+					mode : "events",
+					input : input,
+					menus : menus,
+					scenes : scenes,
+					gameState : gameState,
+					wire : true
+				});
+
+				flow.wire();
+
 				simulateKeyPress(vk_escape);
 				input.update();
 				keyboard_clear(vk_escape);
@@ -296,6 +311,24 @@ function gmtlIntegrationTests()
 				};
 
 				initInputInSystems(input, bus, keybinds);
+
+				var gameState = new GameStateManager();
+				gameState.init(bus);
+				gameState.setState(gameState.states.playing);
+
+				var scenes = { };
+
+				var flow = new FlowManager();
+				flow.init(bus,
+				{
+					mode : "events",
+					input : input,
+					scenes : scenes,
+					gameState : gameState,
+					wire : true
+				});
+
+				flow.wire();
 
 				simulateKeyPress(vk_escape);
 				input.update();

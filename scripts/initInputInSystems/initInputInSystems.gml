@@ -170,7 +170,7 @@ function initInputInSystems()
 
 	if(variable_struct_exists(input, "bindSignal") && is_callable(input.bindSignal))
 	{
-		input.bindSignal("pause", "game/pause", "", "");
+		input.bindSignal("pause", "flow/togglePause", "", "");
 		input.bindSignal("recenter", "camera/recenter", "", "");
 		input.bindSignal("toggleFullscreen", "video/toggleFullscreen", "", "");
 	}
