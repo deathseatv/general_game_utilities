@@ -1,7 +1,7 @@
 function AppController() constructor
 {
 	events = undefined;
-
+	assets = undefined;
 	input = undefined;
 	menus = undefined;
 	audio = undefined;
@@ -80,7 +80,9 @@ function AppController() constructor
 				saveGameSetSlot : "saveGame/setSlot"
 			};
 		}
-
+		assets = (variable_global_exists("assets") && is_struct(global.assets)) ? global.assets : new AssetManager();
+		global.assets = assets;
+		assets.init(events);
 		input = (variable_global_exists("input") && is_struct(global.input)) ? global.input : new InputManager();
 		menus = (variable_global_exists("menus") && is_struct(global.menus)) ? global.menus : new MenuManager();
 		audio = (variable_global_exists("audio") && is_struct(global.audio)) ? global.audio : new AudioManager();

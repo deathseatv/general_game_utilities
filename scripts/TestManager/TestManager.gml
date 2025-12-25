@@ -60,4 +60,5 @@ function TestManager()
 	gmtlDebugLogTests();
 	
 	gmtlGuiManagerTests();
+	gmtlAssetManagerTests();
 }

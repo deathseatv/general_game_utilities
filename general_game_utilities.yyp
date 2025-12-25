@@ -47,6 +47,8 @@
     {"id":{"name":"Room1","path":"rooms/Room1/Room1.yy",},},
     {"id":{"name":"AppController","path":"scripts/AppController/AppController.yy",},},
     {"id":{"name":"AppControllerTests","path":"scripts/AppControllerTests/AppControllerTests.yy",},},
+    {"id":{"name":"AssetManager","path":"scripts/AssetManager/AssetManager.yy",},},
+    {"id":{"name":"AssetManagerTests","path":"scripts/AssetManagerTests/AssetManagerTests.yy",},},
     {"id":{"name":"AudioManager","path":"scripts/AudioManager/AudioManager.yy",},},
     {"id":{"name":"AudioManagerTests","path":"scripts/AudioManagerTests/AudioManagerTests.yy",},},
     {"id":{"name":"CameraManager","path":"scripts/CameraManager/CameraManager.yy",},},
