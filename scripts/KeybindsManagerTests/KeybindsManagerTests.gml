@@ -11,6 +11,7 @@ function gmtlKeybindsTests()
 				expect(kb.binds.pause).toBe(kb.defaults.pause);
 				expect(kb.binds.recenter).toBe(kb.defaults.recenter);
 				expect(kb.binds.toggleFullscreen).toBe(kb.defaults.toggleFullscreen);
+				expect(kb.binds.console).toBe(kb.defaults.console);
 			});
 
 			test("getKey returns undefined for unknown action", function()

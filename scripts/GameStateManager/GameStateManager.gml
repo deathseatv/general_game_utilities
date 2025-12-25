@@ -2,6 +2,8 @@ function GameStateManager() constructor
 {
 	eventBus = undefined;
 
+	unsubs = [];
+
 	states =
 	{
 		boot : "boot",
@@ -205,21 +207,40 @@ function GameStateManager() constructor
 		setState(states.gameOver);
 	};
 
+	clearWiring = function()
+	{
+		var n = array_length(unsubs);
+		for(var i = 0; i < n; i += 1)
+		{
+			var fn = unsubs[i];
+			if(is_callable(fn)) fn();
+		}
+		unsubs = [];
+	};
+
+	destroy = function()
+	{
+		self.clearWiring();
+		eventBus = undefined;
+		return true;
+	};
+
 	init = function(bus)
 	{
 		eventBus = bus;
+		self.clearWiring();
 
 		if(is_undefined(eventBus))
 		{
 			return;
 		}
 
-		eventBus.on("game/pause", method(self, self.onPauseRequested));
-		eventBus.on("game/unpause", method(self, self.onUnpauseRequested));
-		eventBus.on("scene/didLoad", method(self, self.onSceneDidLoad));
+		array_push(unsubs, eventBus.on("game/pause", method(self, self.onPauseRequested)));
+		array_push(unsubs, eventBus.on("game/unpause", method(self, self.onUnpauseRequested)));
+		array_push(unsubs, eventBus.on("scene/didLoad", method(self, self.onSceneDidLoad)));
 
-		eventBus.on("game/start", method(self, self.onGameStart));
-		eventBus.on("game/mainMenu", method(self, self.onMainMenu));
-		eventBus.on("game/gameOver", method(self, self.onGameOver));
+		array_push(unsubs, eventBus.on("game/start", method(self, self.onGameStart)));
+		array_push(unsubs, eventBus.on("game/mainMenu", method(self, self.onMainMenu)));
+		array_push(unsubs, eventBus.on("game/gameOver", method(self, self.onGameOver)));
 	};
 }

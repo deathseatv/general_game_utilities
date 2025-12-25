@@ -2,6 +2,8 @@ function SaveGameManager() constructor
 {
 	eventBus = undefined;
 
+	unsubs = [];
+
 	saveVersion = 1;
 	activeSlot = 1;
 
@@ -487,18 +489,37 @@ function SaveGameManager() constructor
 		}
 	};
 
+	clearWiring = function()
+	{
+		var n = array_length(unsubs);
+		for(var i = 0; i < n; i += 1)
+		{
+			var fn = unsubs[i];
+			if(is_callable(fn)) fn();
+		}
+		unsubs = [];
+	};
+
+	destroy = function()
+	{
+		self.clearWiring();
+		eventBus = undefined;
+		return true;
+	};
+
 	init = function(bus)
 	{
 		eventBus = bus;
+		self.clearWiring();
 
 		if(is_undefined(eventBus))
 		{
 			return;
 		}
 
-		eventBus.on("saveGame/save", method(self, self.onSave));
-		eventBus.on("saveGame/load", method(self, self.onLoad));
-		eventBus.on("saveGame/delete", method(self, self.onDelete));
-		eventBus.on("saveGame/setSlot", method(self, self.onSetSlot));
+		array_push(unsubs, eventBus.on("saveGame/save", method(self, self.onSave)));
+		array_push(unsubs, eventBus.on("saveGame/load", method(self, self.onLoad)));
+		array_push(unsubs, eventBus.on("saveGame/delete", method(self, self.onDelete)));
+		array_push(unsubs, eventBus.on("saveGame/setSlot", method(self, self.onSetSlot)));
 	};
 }

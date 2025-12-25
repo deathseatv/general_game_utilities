@@ -32,45 +32,16 @@ function gmtlIisSnapshotGlobals()
 	[
 		"input",
 		"events",
-		"eventBus"
+		"eventBus",
+		"eventNames"
 	];
 
-	var snap =
-	{
-		names : names,
-		exists : [],
-		values : []
-	};
-
-	var n = array_length(names);
-
-	for(var i = 0; i < n; i += 1)
-	{
-		var key = names[i];
-		snap.exists[i] = gmtlIisHasGlobal(key);
-		snap.values[i] = gmtlIisGetGlobal(key);
-	}
-
-	return snap;
+	return gmtlSnapshotGlobals(names);
 }
 
 function gmtlIisRestoreGlobals(snap)
 {
-	var n = array_length(snap.names);
-
-	for(var i = 0; i < n; i += 1)
-	{
-		var key = snap.names[i];
-
-		if(snap.exists[i])
-		{
-			gmtlIisSetGlobal(key, snap.values[i]);
-		}
-		else
-		{
-			gmtlIisRemoveGlobal(key);
-		}
-	}
+	gmtlRestoreGlobals(snap);
 }
 
 function gmtlInitInputInSystemsTests_safe3()

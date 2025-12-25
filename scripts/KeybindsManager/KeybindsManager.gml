@@ -6,14 +6,16 @@ function KeybindsManager() constructor
 	{
 		pause : vk_escape,
 		recenter : vk_space,
-		toggleFullscreen : vk_f10
+		toggleFullscreen : vk_f10,
+		console : 192
 	};
 
 	binds =
 	{
 		pause : defaults.pause,
 		recenter : defaults.recenter,
-		toggleFullscreen : defaults.toggleFullscreen
+		toggleFullscreen : defaults.toggleFullscreen,
+		console : defaults.console
 	};
 
 	getSavePath = function()

@@ -3,6 +3,20 @@ function EventBus() constructor
 	listeners = {};
 	nextId = 0;
 
+	traceEnabled = false;
+	traceFilterPrefix = "";
+
+	setTrace = function(enabled, prefix)
+	{
+		traceEnabled = (enabled != 0);
+
+		if(argument_count >= 2)
+		{
+			traceFilterPrefix = string(prefix);
+		}
+	};
+
+
 	makeUnsubscriber = function(busRef, eventName, subId)
 	{
 		var token =
@@ -113,6 +127,22 @@ function EventBus() constructor
 		if(is_undefined(eventName) || eventName == "")
 		{
 			return 0;
+		}
+
+		var listenerCount = 0;
+		if(variable_struct_exists(listeners, eventName))
+		{
+			listenerCount = array_length(listeners[$ eventName]);
+		}
+
+		if(traceEnabled)
+		{
+			var en = string(eventName);
+			var ok = (traceFilterPrefix == "") || (string_pos(traceFilterPrefix, en) == 1);
+			if(ok)
+			{
+				show_debug_message("[EventBus] " + en + " (" + string(listenerCount) + ")");
+			}
 		}
 
 		if(!variable_struct_exists(listeners, eventName))

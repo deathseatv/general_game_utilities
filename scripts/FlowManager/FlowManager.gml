@@ -47,6 +47,18 @@ function FlowManager() constructor
 		}
 	};
 
+	ev = function(key, fallback)
+	{
+		if(variable_global_exists("eventNames")
+			&& is_struct(global.eventNames)
+			&& variable_struct_exists(global.eventNames, key))
+		{
+			return global.eventNames[$ key];
+		}
+
+		return fallback;
+	};
+
 	getStateToken = function(key)
 	{
 		var k = string(key);
@@ -173,7 +185,7 @@ function FlowManager() constructor
 			return menus.show(_id);
 		}
 
-		return emit("menu/show", { menuId : _id });
+		return emit(ev("menuShow", "menu/show"), { menuId : _id });
 	};
 
 	closeMenuSafe = function()
@@ -186,7 +198,7 @@ function FlowManager() constructor
 			return true;
 		}
 
-		return emit("menu/close", { });
+		return emit(ev("menuClose", "menu/close"), { });
 	};
 
 	isMenuOpenSafe = function()
@@ -215,7 +227,7 @@ function FlowManager() constructor
 			return scenes.load(sceneId);
 		}
 
-		return emit("scene/load", { sceneId : sceneId });
+		return emit(ev("sceneLoad", "scene/load"), { sceneId : sceneId });
 	};
 
 	consumeSignalSafe = function(signalName)
@@ -244,6 +256,18 @@ function FlowManager() constructor
 		unsubs = [];
 	};
 
+
+	destroy = function()
+	{
+		self.clearWiring();
+		eventBus = undefined;
+		menus = undefined;
+		scenes = undefined;
+		gameState = undefined;
+		input = undefined;
+		return true;
+	};
+
 	wire = function()
 	{
 		self.clearWiring();
@@ -255,21 +279,21 @@ function FlowManager() constructor
 			return false;
 		}
 
-		array_push(unsubs, eventBus.on("flow/boot", method(self, self.onBoot)));
-		array_push(unsubs, eventBus.on("flow/startGame", method(self, self.onStartGame)));
-		array_push(unsubs, eventBus.on("flow/mainMenu", method(self, self.onMainMenu)));
-		array_push(unsubs, eventBus.on("flow/pause", method(self, self.onPause)));
-		array_push(unsubs, eventBus.on("flow/unpause", method(self, self.onUnpause)));
-		array_push(unsubs, eventBus.on("flow/togglePause", method(self, self.onTogglePause)));
-		array_push(unsubs, eventBus.on("flow/quit", method(self, self.onQuit)));
+		array_push(unsubs, eventBus.on(ev("flowBoot", "flow/boot"), method(self, self.onBoot)));
+		array_push(unsubs, eventBus.on(ev("flowStartGame", "flow/startGame"), method(self, self.onStartGame)));
+		array_push(unsubs, eventBus.on(ev("flowMainMenu", "flow/mainMenu"), method(self, self.onMainMenu)));
+		array_push(unsubs, eventBus.on(ev("flowPause", "flow/pause"), method(self, self.onPause)));
+		array_push(unsubs, eventBus.on(ev("flowUnpause", "flow/unpause"), method(self, self.onUnpause)));
+		array_push(unsubs, eventBus.on(ev("flowTogglePause", "flow/togglePause"), method(self, self.onTogglePause)));
+		array_push(unsubs, eventBus.on(ev("flowQuit", "flow/quit"), method(self, self.onQuit)));
 
 		if(mode == "direct")
 		{
-			array_push(unsubs, eventBus.on("game/start", method(self, self.onGameStart)));
-			array_push(unsubs, eventBus.on("game/mainMenu", method(self, self.onGameMainMenu)));
-			array_push(unsubs, eventBus.on("game/pause", method(self, self.onGamePause)));
-			array_push(unsubs, eventBus.on("game/unpause", method(self, self.onGameUnpause)));
-			array_push(unsubs, eventBus.on("scene/didLoad", method(self, self.onSceneDidLoad)));
+			array_push(unsubs, eventBus.on(ev("gameStart", "game/start"), method(self, self.onGameStart)));
+			array_push(unsubs, eventBus.on(ev("gameMainMenu", "game/mainMenu"), method(self, self.onGameMainMenu)));
+			array_push(unsubs, eventBus.on(ev("gamePause", "game/pause"), method(self, self.onGamePause)));
+			array_push(unsubs, eventBus.on(ev("gameUnpause", "game/unpause"), method(self, self.onGameUnpause)));
+			array_push(unsubs, eventBus.on(ev("sceneDidLoad", "scene/didLoad"), method(self, self.onSceneDidLoad)));
 		}
 
 		return true;
@@ -319,7 +343,7 @@ function FlowManager() constructor
 
 		if(mode == "events")
 		{
-			return emit("menu/show", { menuId : ids.introMenu });
+			return emit(ev("menuShow", "menu/show"), { menuId : ids.introMenu });
 		}
 
 		setStateSafe("menu");
@@ -335,7 +359,7 @@ function FlowManager() constructor
 
 		if(mode == "events")
 		{
-			return emit("game/start", { sceneId : sid });
+			return emit(ev("gameStart", "game/start"), { sceneId : sid });
 		}
 
 		setStateSafe("loading");
@@ -350,7 +374,7 @@ function FlowManager() constructor
 
 		if(mode == "events")
 		{
-			return emit("game/mainMenu", { });
+			return emit(ev("gameMainMenu", "game/mainMenu"), { });
 		}
 
 		clearStateStackSafe();
@@ -365,7 +389,7 @@ function FlowManager() constructor
 
 		if(mode == "events")
 		{
-			return emit("game/pause", { });
+			return emit(ev("gamePause", "game/pause"), { });
 		}
 
 		if(!isStateSafe("playing"))
@@ -385,8 +409,8 @@ function FlowManager() constructor
 
 		if(mode == "events")
 		{
-			emit("game/unpause", { });
-			emit("menu/close", { });
+			emit(ev("gameUnpause", "game/unpause"), { });
+			emit(ev("menuClose", "menu/close"), { });
 			return true;
 		}
 
@@ -414,8 +438,8 @@ function FlowManager() constructor
 
 			if(menuId == ids.pauseMenu || isStateSafe("paused"))
 			{
-				emit("game/unpause", { });
-				emit("menu/close", { });
+				emit(ev("gameUnpause", "game/unpause"), { });
+				emit(ev("menuClose", "menu/close"), { });
 				return true;
 			}
 
@@ -424,7 +448,7 @@ function FlowManager() constructor
 				return false;
 			}
 
-			return emit("game/pause", { });
+			return emit(ev("gamePause", "game/pause"), { });
 		}
 
 		if(isStateSafe("paused"))

@@ -2,6 +2,8 @@ function TimeManager() constructor
 {
 	eventBus = undefined;
 
+	unsubs = [];
+
 	isPaused = false;
 	timeScale = 1.0;
 	baseFps = game_get_speed(gamespeed_fps);
@@ -130,6 +132,24 @@ function TimeManager() constructor
 		setTimeScale(payload.value);
 	};
 
+	clearWiring = function()
+	{
+		var n = array_length(unsubs);
+		for(var i = 0; i < n; i += 1)
+		{
+			var fn = unsubs[i];
+			if(is_callable(fn)) fn();
+		}
+		unsubs = [];
+	};
+
+	destroy = function()
+	{
+		self.clearWiring();
+		eventBus = undefined;
+		return true;
+	};
+
 	init = function(bus)
 	{
 		setEventBus(bus);
@@ -139,8 +159,8 @@ function TimeManager() constructor
 			return;
 		}
 
-		eventBus.on("pause/entered", method(self, self.onPauseEntered));
-		eventBus.on("pause/exited", method(self, self.onPauseExited));
-		eventBus.on("time/setScale", method(self, self.onSetTimeScale));
+		array_push(unsubs, eventBus.on("pause/entered", method(self, self.onPauseEntered)));
+		array_push(unsubs, eventBus.on("pause/exited", method(self, self.onPauseExited)));
+		array_push(unsubs, eventBus.on("time/setScale", method(self, self.onSetTimeScale)));
 	};
 }

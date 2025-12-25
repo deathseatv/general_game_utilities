@@ -2,6 +2,8 @@ function CameraManager() constructor
 {
 	eventBus = undefined;
 
+	unsubs = [];
+
 	target = noone;
 
 	getCameraId = function()
@@ -43,15 +45,34 @@ function CameraManager() constructor
 		recenter();
 	};
 
+	clearWiring = function()
+	{
+		var n = array_length(unsubs);
+		for(var i = 0; i < n; i += 1)
+		{
+			var fn = unsubs[i];
+			if(is_callable(fn)) fn();
+		}
+		unsubs = [];
+	};
+
+	destroy = function()
+	{
+		self.clearWiring();
+		eventBus = undefined;
+		return true;
+	};
+
 	init = function(bus)
 	{
 		eventBus = bus;
+		self.clearWiring();
 
 		if(is_undefined(eventBus))
 		{
 			return;
 		}
 
-		eventBus.on("camera/recenter", method(self, self.onRecenter));
+		array_push(unsubs, eventBus.on("camera/recenter", method(self, self.onRecenter)));
 	};
 }

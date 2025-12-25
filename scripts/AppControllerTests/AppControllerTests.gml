@@ -32,6 +32,7 @@ function gmtlAc4SnapshotGlobals()
 	[
 		"events",
 		"eventBus",
+		"eventNames",
 		"input",
 		"flow",
 		"menus",
@@ -45,43 +46,12 @@ function gmtlAc4SnapshotGlobals()
 		"debugConsole"
 	];
 
-	var snap =
-	{
-		names : names,
-		exists : [],
-		values : []
-	};
-
-	var n = array_length(names);
-
-	for(var i = 0; i < n; i += 1)
-	{
-		var key = names[i];
-
-		snap.exists[i] = gmtlAc4HasGlobal(key);
-		snap.values[i] = gmtlAc4GetGlobal(key);
-	}
-
-	return snap;
+	return gmtlSnapshotGlobals(names);
 }
 
 function gmtlAc4RestoreGlobals(snap)
 {
-	var n = array_length(snap.names);
-
-	for(var i = 0; i < n; i += 1)
-	{
-		var key = snap.names[i];
-
-		if(snap.exists[i])
-		{
-			gmtlAc4SetGlobal(key, snap.values[i]);
-		}
-		else
-		{
-			gmtlAc4RemoveGlobal(key);
-		}
-	}
+	gmtlRestoreGlobals(snap);
 }
 
 function gmtlAc4MakeBus()

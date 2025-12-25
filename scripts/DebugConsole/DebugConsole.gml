@@ -4,6 +4,7 @@ function DebugConsole() constructor
 	pauseWhenOpen = true;
 
 	openKey = 192;
+	useKeybinds = false;
 
 	consumed = false;
 
@@ -118,7 +119,27 @@ function DebugConsole() constructor
 			}
 		}
 
-		if(keyboard_check_pressed(openKey))
+		var toggleKey = openKey;
+		if(useKeybinds
+			&& variable_global_exists("keybinds")
+			&& is_struct(global.keybinds))
+		{
+			var kb = global.keybinds;
+			if(variable_struct_exists(kb, "getKey") && is_callable(kb.getKey))
+			{
+				var v = kb.getKey("console");
+				if(is_real(v))
+				{
+					var k = floor(v);
+					if(k > 0)
+					{
+						toggleKey = k;
+					}
+				}
+			}
+		}
+
+		if(keyboard_check_pressed(toggleKey))
 		{
 			toggle(canOpen);
 			consumed = true;

@@ -36,6 +36,12 @@ function gmtlSaveGameMakeProvider(initialValue)
 	};
 }
 
+
+function gmtlSaveGameMakePrefix()
+{
+	return "gmtl_save_" + string(get_timer()) + "_" + string(irandom(1000000)) + "_";
+}
+
 function gmtlSaveGameCleanup(prefix, slot)
 {
 	var path = string(prefix) + string(slot) + ".json";
@@ -60,19 +66,20 @@ function gmtlSaveGameTests()
 		{
 			test("save writes file and load restores provider data", function()
 			{
-				var slot = 9991;
-				gmtlSaveGameCleanup("gmtl_save_", slot);
+				var prefix = gmtlSaveGameMakePrefix();
+				var slot = 1;
+				gmtlSaveGameCleanup(prefix, slot);
 
 				var p = gmtlSaveGameMakeProvider(7);
 
 				var sm = new SaveGameManager();
-				sm.setFilePrefix("gmtl_save_");
+				sm.setFilePrefix(prefix);
 				sm.registerProvider("p", p);
 
 				var ok = sm.save(slot);
 				expect(ok).toBeTruthy();
-				expect(file_exists("gmtl_save_" + string(slot) + ".json")).toBeTruthy();
-				expect(file_exists("gmtl_save_" + string(slot) + ".json.tmp")).toBeFalsy();
+				expect(file_exists(prefix + string(slot) + ".json")).toBeTruthy();
+				expect(file_exists(prefix + string(slot) + ".json.tmp")).toBeFalsy();
 
 				p.value = 0;
 
@@ -80,39 +87,41 @@ function gmtlSaveGameTests()
 				expect(ok).toBeTruthy();
 				expect(p.value).toBe(7);
 
-				gmtlSaveGameCleanup("gmtl_save_", slot);
+				gmtlSaveGameCleanup(prefix, slot);
 			});
 
 			test("deleteSave removes save file", function()
 			{
+				var prefix = gmtlSaveGameMakePrefix();
 				var slot = 9992;
-				gmtlSaveGameCleanup("gmtl_save_", slot);
+				gmtlSaveGameCleanup(prefix, slot);
 
 				var p = gmtlSaveGameMakeProvider(3);
 
 				var sm = new SaveGameManager();
-				sm.setFilePrefix("gmtl_save_");
+				sm.setFilePrefix(prefix);
 				sm.registerProvider("p", p);
 
 				sm.save(slot);
-				expect(file_exists("gmtl_save_" + string(slot) + ".json")).toBeTruthy();
+				expect(file_exists(prefix + string(slot) + ".json")).toBeTruthy();
 
 				var ok = sm.deleteSave(slot);
 				expect(ok).toBeTruthy();
-				expect(file_exists("gmtl_save_" + string(slot) + ".json")).toBeFalsy();
+				expect(file_exists(prefix + string(slot) + ".json")).toBeFalsy();
 
-				gmtlSaveGameCleanup("gmtl_save_", slot);
+				gmtlSaveGameCleanup(prefix, slot);
 			});
 
 			test("load migrates when migration registered", function()
 			{
+				var prefix = gmtlSaveGameMakePrefix();
 				var slot = 9993;
-				gmtlSaveGameCleanup("gmtl_save_", slot);
+				gmtlSaveGameCleanup(prefix, slot);
 
 				var p1 = gmtlSaveGameMakeProvider(10);
 
 				var sm1 = new SaveGameManager();
-				sm1.setFilePrefix("gmtl_save_");
+				sm1.setFilePrefix(prefix);
 				sm1.saveVersion = 1;
 				sm1.registerProvider("p", p1);
 				sm1.save(slot);
@@ -120,7 +129,7 @@ function gmtlSaveGameTests()
 				var p2 = gmtlSaveGameMakeProvider(0);
 
 				var sm2 = new SaveGameManager();
-				sm2.setFilePrefix("gmtl_save_");
+				sm2.setFilePrefix(prefix);
 				sm2.saveVersion = 2;
 				sm2.registerProvider("p", p2);
 
@@ -143,13 +152,14 @@ function gmtlSaveGameTests()
 				expect(ok).toBeTruthy();
 				expect(p2.value).toBe(15);
 
-				gmtlSaveGameCleanup("gmtl_save_", slot);
+				gmtlSaveGameCleanup(prefix, slot);
 			});
 
 			test("bus save/load events call methods and emit saved/loaded", function()
 			{
+				var prefix = gmtlSaveGameMakePrefix();
 				var slot = 9994;
-				gmtlSaveGameCleanup("gmtl_save_", slot);
+				gmtlSaveGameCleanup(prefix, slot);
 
 				var bus = new EventBus();
 
@@ -162,7 +172,7 @@ function gmtlSaveGameTests()
 				var p = gmtlSaveGameMakeProvider(2);
 
 				var sm = new SaveGameManager();
-				sm.setFilePrefix("gmtl_save_");
+				sm.setFilePrefix(prefix);
 				sm.registerProvider("p", p);
 				sm.init(bus);
 
@@ -179,7 +189,7 @@ function gmtlSaveGameTests()
 				expect(loadedSpy.emits[0].payload.slot).toBe(slot);
 				expect(p.value).toBe(2);
 
-				gmtlSaveGameCleanup("gmtl_save_", slot);
+				gmtlSaveGameCleanup(prefix, slot);
 			});
 		});
 	});

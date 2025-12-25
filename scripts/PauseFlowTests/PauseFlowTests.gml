@@ -47,46 +47,17 @@ function gmtlPfSnapshotGlobals()
 		"flow",
 		"events",
 		"eventBus",
+		"eventNames",
 		"keybinds",
 		"settings"
 	];
 
-	var snap =
-	{
-		names : names,
-		exists : [],
-		values : []
-	};
-
-	var n = array_length(names);
-
-	for(var i = 0; i < n; i += 1)
-	{
-		var key = names[i];
-		snap.exists[i] = gmtlPfHasGlobal(key);
-		snap.values[i] = gmtlPfGetGlobal(key);
-	}
-
-	return snap;
+	return gmtlSnapshotGlobals(names);
 }
 
 function gmtlPfRestoreGlobals(snap)
 {
-	var n = array_length(snap.names);
-
-	for(var i = 0; i < n; i += 1)
-	{
-		var key = snap.names[i];
-
-		if(snap.exists[i])
-		{
-			gmtlPfSetGlobal(key, snap.values[i]);
-		}
-		else
-		{
-			gmtlPfRemoveGlobal(key);
-		}
-	}
+	gmtlRestoreGlobals(snap);
 }
 
 function gmtlPfMakeHarness()

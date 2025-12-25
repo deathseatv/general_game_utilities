@@ -44,6 +44,43 @@ function AppController() constructor
 			global.eventBus = events;
 		}
 
+		if(!variable_global_exists("eventNames") || !is_struct(global.eventNames))
+		{
+			global.eventNames =
+			{
+				videoToggleFullscreen : "video/toggleFullscreen",
+				cameraRecenter : "camera/recenter",
+				flowTogglePause : "flow/togglePause",
+				gamePause : "game/pause",
+				gameUnpause : "game/unpause",
+				gameStart : "game/start",
+				gameMainMenu : "game/mainMenu",
+				menuShow : "menu/show",
+				menuClose : "menu/close",
+				flowBoot : "flow/boot",
+				flowStartGame : "flow/startGame",
+				flowMainMenu : "flow/mainMenu",
+				flowPause : "flow/pause",
+				flowUnpause : "flow/unpause",
+				flowQuit : "flow/quit",
+				sceneLoad : "scene/load",
+				sceneDidLoad : "scene/didLoad",
+				settingsChanged : "settings/changed",
+				settingsSet : "settings/set",
+				settingsApply : "settings/apply",
+				settingsReset : "settings/reset",
+				audioPlayUi : "audio/playUi",
+				audioPlaySfx : "audio/playSfx",
+				audioPlayMusic : "audio/playMusic",
+				audioStopMusic : "audio/stopMusic",
+				audioSetVolume : "audio/setVolume",
+				saveGameSave : "saveGame/save",
+				saveGameLoad : "saveGame/load",
+				saveGameDelete : "saveGame/delete",
+				saveGameSetSlot : "saveGame/setSlot"
+			};
+		}
+
 		input = (variable_global_exists("input") && is_struct(global.input)) ? global.input : new InputManager();
 		menus = (variable_global_exists("menus") && is_struct(global.menus)) ? global.menus : new MenuManager();
 		audio = (variable_global_exists("audio") && is_struct(global.audio)) ? global.audio : new AudioManager();
@@ -57,6 +94,11 @@ function AppController() constructor
 		gui = (variable_global_exists("gui") && is_struct(global.gui)) ? global.gui : new GuiManager();
 
 		debugConsole = (variable_global_exists("debugConsole") && is_struct(global.debugConsole)) ? global.debugConsole : new DebugConsole();
+
+		if(is_struct(debugConsole) && variable_struct_exists(debugConsole, "useKeybinds"))
+		{
+			debugConsole.useKeybinds = true;
+		}
 
 		var canReuseFlow = variable_global_exists("flow")
 			&& is_struct(global.flow)
@@ -112,7 +154,7 @@ function AppController() constructor
 
 		if(is_struct(events))
 		{
-			events.on("video/toggleFullscreen", self.onToggleFullscreen, self);
+			events.on(global.eventNames.videoToggleFullscreen, self.onToggleFullscreen, self);
 		}
 
 		settings.apply();
@@ -140,10 +182,6 @@ function AppController() constructor
 				wire : true
 			});
 
-			if(variable_struct_exists(flow, "wire") && is_callable(flow.wire))
-			{
-				flow.wire();
-			}
 		}
 
 		if(is_struct(flow)
@@ -214,6 +252,33 @@ function AppController() constructor
 			debugConsole.close();
 		});
 
+
+		debugConsole.registerCommand("trace", "trace [0/1] [prefix]", function(args, line)
+		{
+			if(!is_struct(events)
+				|| !variable_struct_exists(events, "setTrace")
+				|| !is_callable(events.setTrace))
+			{
+				debugConsole.log("Event trace unavailable.");
+				return;
+			}
+
+			var argc = array_length(args);
+
+			if(argc == 0)
+			{
+				events.setTrace(events.traceEnabled ? 0 : 1, events.traceFilterPrefix);
+			}
+			else
+			{
+				var enabled = (real(args[0]) != 0);
+				var prefix = (argc >= 2) ? string(args[1]) : events.traceFilterPrefix;
+				events.setTrace(enabled, prefix);
+			}
+
+			debugConsole.log("event trace = " + string(events.traceEnabled) + " prefix=\"" + string(events.traceFilterPrefix) + "\"");
+		});
+
 		debugConsole.log("Console ready. Type 'help'.");
 	};
 
@@ -227,6 +292,21 @@ function AppController() constructor
 
 		var isFs = window_get_fullscreen();
 		window_set_fullscreen(!isFs);
+	};
+
+	shutdown = function()
+	{
+		if(is_struct(flow) && variable_struct_exists(flow, "destroy") && is_callable(flow.destroy)) flow.destroy();
+		if(is_struct(menus) && variable_struct_exists(menus, "destroy") && is_callable(menus.destroy)) menus.destroy();
+		if(is_struct(audio) && variable_struct_exists(audio, "destroy") && is_callable(audio.destroy)) audio.destroy();
+		if(is_struct(scenes) && variable_struct_exists(scenes, "destroy") && is_callable(scenes.destroy)) scenes.destroy();
+		if(is_struct(gameState) && variable_struct_exists(gameState, "destroy") && is_callable(gameState.destroy)) gameState.destroy();
+		if(is_struct(settings) && variable_struct_exists(settings, "destroy") && is_callable(settings.destroy)) settings.destroy();
+		if(is_struct(time) && variable_struct_exists(time, "destroy") && is_callable(time.destroy)) time.destroy();
+		if(is_struct(camera) && variable_struct_exists(camera, "destroy") && is_callable(camera.destroy)) camera.destroy();
+		if(is_struct(gui) && variable_struct_exists(gui, "destroy") && is_callable(gui.destroy)) gui.destroy();
+
+		booted = false;
 	};
 
 	update = function()

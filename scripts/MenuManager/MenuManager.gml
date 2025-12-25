@@ -2,6 +2,8 @@ function MenuManager() constructor
 {
 	eventBus = undefined;
 	keybinds = undefined;
+
+	unsubs = [];
 	inputLockFrames = 0;
 
 	isOpen = false;
@@ -43,9 +45,29 @@ function MenuManager() constructor
 		versionString = string(v);
 	};
 
+	clearWiring = function()
+	{
+		var n = array_length(unsubs);
+		for(var i = 0; i < n; i += 1)
+		{
+			var fn = unsubs[i];
+			if(is_callable(fn)) fn();
+		}
+		unsubs = [];
+	};
+
+	destroy = function()
+	{
+		self.clearWiring();
+		eventBus = undefined;
+		keybinds = undefined;
+		return true;
+	};
+
 	init = function(bus)
 	{
 		eventBus = bus;
+		self.clearWiring();
 
 		if(variable_global_exists("keybinds") && is_struct(global.keybinds))
 		{
@@ -54,11 +76,11 @@ function MenuManager() constructor
 
 		if(!is_undefined(eventBus))
 		{
-			eventBus.on("menu/open", method(self, self.onOpen));
-			eventBus.on("menu/close", method(self, self.onClose));
-			eventBus.on("menu/show", method(self, self.onShow));
-			eventBus.on("menu/loading", method(self, self.onLoading));
-			eventBus.on("settings/changed", method(self, self.onSettingsChanged));
+			array_push(unsubs, eventBus.on("menu/open", method(self, self.onOpen)));
+			array_push(unsubs, eventBus.on("menu/close", method(self, self.onClose)));
+			array_push(unsubs, eventBus.on("menu/show", method(self, self.onShow)));
+			array_push(unsubs, eventBus.on("menu/loading", method(self, self.onLoading)));
+			array_push(unsubs, eventBus.on("settings/changed", method(self, self.onSettingsChanged)));
 		}
 
 		self.syncVolumesFromSettings();

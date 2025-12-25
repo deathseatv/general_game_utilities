@@ -2,6 +2,8 @@ function AudioManager() constructor
 {
 	eventBus = undefined;
 
+	unsubs = [];
+
 	masterVolume = 1.0;
 
 	busVolumes =
@@ -297,19 +299,38 @@ function AudioManager() constructor
 		}
 	};
 
+	clearWiring = function()
+	{
+		var n = array_length(unsubs);
+		for(var i = 0; i < n; i += 1)
+		{
+			var fn = unsubs[i];
+			if(is_callable(fn)) fn();
+		}
+		unsubs = [];
+	};
+
+	destroy = function()
+	{
+		self.clearWiring();
+		eventBus = undefined;
+		return true;
+	};
+
 	init = function(bus)
 	{
 		eventBus = bus;
+		self.clearWiring();
 
 		if(is_undefined(eventBus))
 		{
 			return;
 		}
 
-		eventBus.on("audio/playSfx", method(self, self.onPlaySfx));
-		eventBus.on("audio/playUi", method(self, self.onPlayUi));
-		eventBus.on("audio/playMusic", method(self, self.onPlayMusic));
-		eventBus.on("audio/stopMusic", method(self, self.onStopMusic));
-		eventBus.on("audio/setVolume", method(self, self.onSetVolume));
+		array_push(unsubs, eventBus.on("audio/playSfx", method(self, self.onPlaySfx)));
+		array_push(unsubs, eventBus.on("audio/playUi", method(self, self.onPlayUi)));
+		array_push(unsubs, eventBus.on("audio/playMusic", method(self, self.onPlayMusic)));
+		array_push(unsubs, eventBus.on("audio/stopMusic", method(self, self.onStopMusic)));
+		array_push(unsubs, eventBus.on("audio/setVolume", method(self, self.onSetVolume)));
 	};
 }

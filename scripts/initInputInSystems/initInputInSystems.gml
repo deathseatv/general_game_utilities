@@ -66,9 +66,10 @@ function initInputInSystems()
 		{
 			actionName : actionName,
 			fallbackKey : fallbackKey,
-			lastKey : -1,
+			lastKey : fallbackKey,
 			keybinds : keybindsRef,
-			watchFn : undefined
+			watchFn : undefined,
+			unwatchFn : undefined
 		};
 
 		if(is_struct(inputRef)
@@ -76,6 +77,13 @@ function initInputInSystems()
 			&& is_callable(inputRef.watchKey))
 		{
 			token.watchFn = method(inputRef, inputRef.watchKey);
+		}
+
+		if(is_struct(inputRef)
+			&& variable_struct_exists(inputRef, "unwatchKey")
+			&& is_callable(inputRef.unwatchKey))
+		{
+			token.unwatchFn = method(inputRef, inputRef.unwatchKey);
 		}
 
 		var mapper = function(raw)
@@ -100,6 +108,11 @@ function initInputInSystems()
 			if(!is_undefined(self.watchFn)
 				&& vkKey != self.lastKey)
 			{
+				if(!is_undefined(self.unwatchFn) && self.lastKey > 0)
+				{
+					self.unwatchFn(self.lastKey);
+				}
+
 				self.watchFn(vkKey);
 				self.lastKey = vkKey;
 			}
@@ -130,20 +143,6 @@ function initInputInSystems()
 		{
 			token.watchFn(fallbackKey);
 
-			if(is_struct(keybindsRef)
-				&& variable_struct_exists(keybindsRef, "getKey")
-				&& is_callable(keybindsRef.getKey))
-			{
-				var initVal = keybindsRef.getKey(actionName);
-				if(is_real(initVal))
-				{
-					var initKey = floor(initVal);
-					if(initKey > 0 && initKey != fallbackKey)
-					{
-						token.watchFn(initKey);
-					}
-				}
-			}
 		}
 
 		return method(token, mapper);

@@ -1,3 +1,12 @@
+		var flowTogglePause = "flow/togglePause";
+		var gamePause = "game/pause";
+
+		if(variable_global_exists("eventNames") && is_struct(global.eventNames))
+		{
+			if(variable_struct_exists(global.eventNames, "flowTogglePause")) flowTogglePause = global.eventNames.flowTogglePause;
+			if(variable_struct_exists(global.eventNames, "gamePause")) gamePause = global.eventNames.gamePause;
+		}
+
 function InputManager() constructor
 {
 	raw =
@@ -44,11 +53,43 @@ function InputManager() constructor
 
 		if(variable_struct_exists(watchedKeysSet, keyName))
 		{
+			watchedKeysSet[$ keyName] += 1;
 			return;
 		}
 
-		watchedKeysSet[$ keyName] = true;
+		watchedKeysSet[$ keyName] = 1;
 		array_push(watchedKeys, key);
+	};
+
+	unwatchKey = function(key)
+	{
+		var keyName = string(key);
+
+		if(!variable_struct_exists(watchedKeysSet, keyName))
+		{
+			return false;
+		}
+
+		watchedKeysSet[$ keyName] -= 1;
+
+		if(watchedKeysSet[$ keyName] > 0)
+		{
+			return true;
+		}
+
+		variable_struct_remove(watchedKeysSet, keyName);
+
+		var n = array_length(watchedKeys);
+		for(var i = 0; i < n; i += 1)
+		{
+			if(watchedKeys[i] == key)
+			{
+				array_delete(watchedKeys, i, 1);
+				break;
+			}
+		}
+
+		return true;
 	};
 
 	watchMouseButton = function(button)

@@ -2,6 +2,8 @@ function SceneManager() constructor
 {
 	eventBus = undefined;
 
+	unsubs = [];
+
 	fadeFrames = 20;
 	fadeAlpha = 0.0;
 
@@ -164,19 +166,38 @@ function SceneManager() constructor
 		// stub: if your state machine drives scenes, translate state -> room here
 	};
 
+	clearWiring = function()
+	{
+		var n = array_length(unsubs);
+		for(var i = 0; i < n; i += 1)
+		{
+			var fn = unsubs[i];
+			if(is_callable(fn)) fn();
+		}
+		unsubs = [];
+	};
+
+	destroy = function()
+	{
+		self.clearWiring();
+		eventBus = undefined;
+		return true;
+	};
+
 	init = function(bus)
 	{
 		setEventBus(bus);
+		self.clearWiring();
 
 		if(is_undefined(eventBus))
 		{
 			return;
 		}
 
-		eventBus.on("scene/load", method(self, self.onSceneLoad));
-		eventBus.on("scene/reload", method(self, self.onSceneReload));
-		eventBus.on("scene/next", method(self, self.onSceneNext));
-		eventBus.on("state/changed", method(self, self.onStateChanged));
+		array_push(unsubs, eventBus.on("scene/load", method(self, self.onSceneLoad)));
+		array_push(unsubs, eventBus.on("scene/reload", method(self, self.onSceneReload)));
+		array_push(unsubs, eventBus.on("scene/next", method(self, self.onSceneNext)));
+		array_push(unsubs, eventBus.on("state/changed", method(self, self.onStateChanged)));
 	};
 
 	update = function()

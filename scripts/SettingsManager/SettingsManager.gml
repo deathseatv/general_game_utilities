@@ -2,6 +2,8 @@ function SettingsManager() constructor
 {
 	eventBus = undefined;
 
+	unsubs = [];
+
 	defaults =
 	{
 		masterVolume : 1.0,
@@ -455,17 +457,36 @@ function SettingsManager() constructor
 		resetDefaults();
 	};
 
+	clearWiring = function()
+	{
+		var n = array_length(unsubs);
+		for(var i = 0; i < n; i += 1)
+		{
+			var fn = unsubs[i];
+			if(is_callable(fn)) fn();
+		}
+		unsubs = [];
+	};
+
+	destroy = function()
+	{
+		self.clearWiring();
+		eventBus = undefined;
+		return true;
+	};
+
 	init = function(bus)
 	{
 		eventBus = bus;
+		self.clearWiring();
 
 		if(is_undefined(eventBus))
 		{
 			return;
 		}
 
-		eventBus.on("settings/set", method(self, self.onSettingsSet));
-		eventBus.on("settings/apply", method(self, self.onSettingsApply));
-		eventBus.on("settings/reset", method(self, self.onSettingsReset));
+		array_push(unsubs, eventBus.on("settings/set", method(self, self.onSettingsSet)));
+		array_push(unsubs, eventBus.on("settings/apply", method(self, self.onSettingsApply)));
+		array_push(unsubs, eventBus.on("settings/reset", method(self, self.onSettingsReset)));
 	};
 }
