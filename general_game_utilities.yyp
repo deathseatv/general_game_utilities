@@ -91,6 +91,7 @@
     {"id":{"name":"MenuManager","path":"scripts/MenuManager/MenuManager.yy",},},
     {"id":{"name":"MenuManagerTests","path":"scripts/MenuManagerTests/MenuManagerTests.yy",},},
     {"id":{"name":"OptionsMenu","path":"scripts/OptionsMenu/OptionsMenu.yy",},},
+    {"id":{"name":"PauseFlowTests","path":"scripts/PauseFlowTests/PauseFlowTests.yy",},},
     {"id":{"name":"PauseMenu","path":"scripts/PauseMenu/PauseMenu.yy",},},
     {"id":{"name":"SaveGameManager","path":"scripts/SaveGameManager/SaveGameManager.yy",},},
     {"id":{"name":"SaveGameManagerTests","path":"scripts/SaveGameManagerTests/SaveGameManagerTests.yy",},},

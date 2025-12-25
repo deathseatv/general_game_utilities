@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"CustomTests",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"CustomTests",
+  "parent":{
+    "name":"TestSuite",
+    "path":"folders/TestSuite.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

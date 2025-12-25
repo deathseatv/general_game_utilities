@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"PauseFlowTests",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"PauseFlowTests",
+  "parent":{
+    "name":"Integration",
+    "path":"folders/TestSuite/Integration.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

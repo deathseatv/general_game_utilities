@@ -60,24 +60,23 @@ function initInputInSystems()
 		}
 	}
 
-	var makePressedMapper = function(actionName, fallbackKey)
+	var makePressedMapper = function(actionName, fallbackKey, inputRef, keybindsRef)
 	{
 		var token =
 		{
 			actionName : actionName,
 			fallbackKey : fallbackKey,
 			lastKey : -1,
-			keybinds : keybinds,
-			input : input,
+			keybinds : keybindsRef,
 			watchFn : undefined
 		};
-		if(is_struct(input)
-			&& variable_struct_exists(input, "watchKey")
-			&& !is_undefined(input.watchKey))
-		{
-			token.watchFn = method(input, input.watchKey);
-		}
 
+		if(is_struct(inputRef)
+			&& variable_struct_exists(inputRef, "watchKey")
+			&& is_callable(inputRef.watchKey))
+		{
+			token.watchFn = method(inputRef, inputRef.watchKey);
+		}
 
 		var mapper = function(raw)
 		{
@@ -131,11 +130,11 @@ function initInputInSystems()
 		{
 			token.watchFn(fallbackKey);
 
-			if(is_struct(keybinds)
-				&& variable_struct_exists(keybinds, "getKey")
-				&& is_callable(keybinds.getKey))
+			if(is_struct(keybindsRef)
+				&& variable_struct_exists(keybindsRef, "getKey")
+				&& is_callable(keybindsRef.getKey))
 			{
-				var initVal = keybinds.getKey(actionName);
+				var initVal = keybindsRef.getKey(actionName);
 				if(is_real(initVal))
 				{
 					var initKey = floor(initVal);
@@ -150,9 +149,10 @@ function initInputInSystems()
 		return method(token, mapper);
 	};
 
-	input.addSignal("pause", makePressedMapper("pause", vk_escape));
-	input.addSignal("recenter", makePressedMapper("recenter", vk_space));
-	input.addSignal("toggleFullscreen", makePressedMapper("toggleFullscreen", vk_f10));
+
+	input.addSignal("pause", makePressedMapper("pause", vk_escape, input, keybinds));
+	input.addSignal("recenter", makePressedMapper("recenter", vk_space, input, keybinds));
+	input.addSignal("toggleFullscreen", makePressedMapper("toggleFullscreen", vk_f10, input, keybinds));
 
 	if(!isValidBus(events))
 	{

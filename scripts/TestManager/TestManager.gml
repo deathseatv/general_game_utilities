@@ -16,6 +16,7 @@ function TestManager()
 	// integration
 	gmtlAppControllerTests_safe4();
 	gmtlInitInputInSystemsTests_safe3();
+	gmtlPauseFlowTests_safe1();
 	
 	// debug console
 	gmtlDebugConsoleTests();
