@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"gguServices",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"gguServices",
+  "parent":{
+    "name":"Integration",
+    "path":"folders/Scripts/Integration.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
